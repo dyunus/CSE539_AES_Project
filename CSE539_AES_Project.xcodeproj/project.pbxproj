@@ -24,6 +24,7 @@
 
 /* Begin PBXFileReference section */
 		4437151125DE24100048EB94 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		4437151325DE276C0048EB94 /* main.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = main.h; sourceTree = "<group>"; };
 		44642DDF25DE223100738AA7 /* CSE539_AES_Project */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CSE539_AES_Project; sourceTree = BUILT_PRODUCTS_DIR; };
 		44642DE225DE223100738AA7 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -60,6 +61,7 @@
 			isa = PBXGroup;
 			children = (
 				44642DE225DE223100738AA7 /* main.cpp */,
+				4437151325DE276C0048EB94 /* main.h */,
 			);
 			path = CSE539_AES_Project;
 			sourceTree = "<group>";
