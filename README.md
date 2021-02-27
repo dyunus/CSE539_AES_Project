@@ -12,3 +12,9 @@ make
 echo -ne "\x70\x6f\x67\x67" > plaintext    
 ./a.out plaintext
 ```
+
+Expected Output:
+```
+Hello, World!
+ezrr
+```

@@ -23,7 +23,7 @@ int main(int argc, const char * argv[]) {
     cout << "Hello, World!\n";
     vector<int> plaintextBytes;
     ifstream plaintextFile(argv[1], ios::binary);
-    while (plaintextFile) {
+    while (plaintextFile) { //read file
         char byte = '\0';
         plaintextFile.get(byte);
         plaintextBytes.push_back(int(byte));

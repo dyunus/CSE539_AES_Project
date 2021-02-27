@@ -15,7 +15,7 @@
 using namespace std;
 
 string cipher(vector<int> plaintext){
-    int key = 21;
+    int key = 21; //random key
     string ciphertext = "";
     for(int c : plaintext){
         ciphertext += c ^ key;
