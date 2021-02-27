@@ -14,10 +14,10 @@
 #include <string>
 using namespace std;
 
-string cipher(string plaintext){
-    int key = 2;
+string cipher(vector<int> plaintext){
+    int key = 21;
     string ciphertext = "";
-    for(char& c : plaintext){
+    for(int c : plaintext){
         ciphertext += c ^ key;
     }
     return ciphertext;

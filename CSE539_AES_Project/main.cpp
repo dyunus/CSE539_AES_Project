@@ -7,6 +7,7 @@
 
 
 #include <iostream>
+#include <fstream>
 #include <cstdio>
 #include <cstdlib>
 #include <map>
@@ -20,7 +21,13 @@ using namespace std;
 int main(int argc, const char * argv[]) {
     // insert code here...
     cout << "Hello, World!\n";
-    string plaintext = argv[1];
-    cout << cipher(plaintext) << endl;
+    vector<int> plaintextBytes;
+    ifstream plaintextFile(argv[1], ios::binary);
+    while (plaintextFile) {
+        char byte = '\0';
+        plaintextFile.get(byte);
+        plaintextBytes.push_back(int(byte));
+    }
+    cout << cipher(plaintextBytes) << endl;
     return 0;
 }
