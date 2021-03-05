@@ -4,15 +4,15 @@
 #include <string>
 #include <vector>
 
-int main(int argc, const char * argv[]) {
+auto main(int argc, const char * argv[]) -> int {
     // Sanity checks for file input
     if (argc != 2) {
-        fprintf(stderr, "Must provide a file-input!\n");
+        std::cerr << "Must provide a file-input!\n";
         exit(1);
     }
 
     std::vector<aes::byte> plaintext_bytes;
-    std::ifstream plaintext_file(argv[1], std::ios::binary); // TODO: I don't know if he'd attack us here, but we might need some sanity checks on file input.
+    std::ifstream plaintext_file(argv[1], std::ios::binary); // TODO(bailey): I don't know if he'd attack us here, but we might need some sanity checks on file input.
 
     // Read file
     while (plaintext_file) {
