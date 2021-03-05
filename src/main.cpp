@@ -21,4 +21,5 @@ auto main(int argc, const char * argv[]) -> int {
         plaintext_bytes.push_back(int(byte));
     }
 
+    printf("Value: %d\n", aes::INV_S_BOX[7][2]);
 }

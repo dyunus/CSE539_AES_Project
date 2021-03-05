@@ -2,3 +2,4 @@ build/
 bin/
 *.xcodeproj/
 .DS_Store
+.vscode/
