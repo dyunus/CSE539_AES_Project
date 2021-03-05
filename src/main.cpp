@@ -21,5 +21,17 @@ auto main(int argc, const char * argv[]) -> int {
         plaintext_bytes.push_back(int(byte));
     }
 
-    printf("Value: %d\n", aes::INV_S_BOX[7][2]);
+    aes::state state = {{
+        {0x19, 0xa0, 0x9a, 0xe9},
+        {0x3d, 0xf4, 0xc6, 0xf8},
+        {0xe3, 0xe2, 0x8d, 0x48},
+        {0xbe, 0x2b, 0x2a, 0x08}
+    }};
+
+    // Sub bytes test (using state from NIST)
+    aes::__debug_print_state(state);
+    aes::sub_bytes(state);
+    aes::__debug_print_state(state);
+    aes::inv_sub_bytes(state);
+    aes::__debug_print_state(state);
 }
