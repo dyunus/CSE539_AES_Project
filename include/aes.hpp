@@ -100,6 +100,17 @@ namespace aes {
     /**
      *
      */
+    void shift_rows(state& state);
+
+    /**
+     *
+     */
+    void inv_shift_rows(state& state);
+
+
+    /**
+     *
+     */
     void mix_columns(state& state);
 
     /**

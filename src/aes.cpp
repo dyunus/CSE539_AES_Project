@@ -20,6 +20,64 @@ void aes::inv_sub_bytes(state& state) {
     __swap_bytes(state, INV_S_BOX);
 }
 
+void aes::shift_rows(state& state) {
+    //TODO
+	byte temp;
+
+	//shift row 1 
+	temp = state[1][0];
+	state[1][0] = state[1][1];
+	state[1][1] = state[1][2];
+	state[1][2] = state[1][3];
+	state[1][3] = temp;
+
+	//shift row 2
+	//swap index 0 and 2
+	temp = state[2][0];
+	state[2][0] = state[2][2];
+	state[2][2] = temp;
+
+	//swap index 1 and 3
+	temp = state[2][1];
+	state[2][1] = state[2][3];
+	state[2][3] = temp;
+
+	//shift row 3
+	temp = state[3][3];
+	state[3][3] = state[3][2];
+	state[3][2] = state[3][1];
+	state[3][1] = state[3][0];
+	state[3][0] = temp;
+}
+
+void aes::inv_shift_rows(state& state) {
+    byte temp;
+
+	//inverse shift row 1 
+	temp = state[1][3];
+	state[1][3] = state[1][2];
+	state[1][2] = state[1][1];
+	state[1][1] = state[1][0];
+	state[1][0] = temp;
+
+	//inverse shift row 2
+	//swap index 0 and 2
+	temp = state[2][0];
+	state[2][0] = state[2][2];
+	state[2][2] = temp;
+
+	//swap index 1 and 3
+	temp = state[2][1];
+	state[2][1] = state[2][3];
+	state[2][3] = temp;
+
+	//inverse shift row 3
+	temp = state[3][0];
+	state[3][0] = state[3][1];
+	state[3][1] = state[3][2];
+	state[3][2] = state[3][3];
+	state[3][3] = temp;
+}
 
 
 byte aes:: __field_multiply_by_2(byte s){

@@ -35,6 +35,23 @@ auto main(int argc, const char * argv[]) -> int {
     aes::inv_sub_bytes(state);
     aes::__debug_print_state(state);
 
+
+
+    std::cout << "Testing Shift Rows:\n";
+    // shift rows test (using state from NIST)
+    aes:: state state3= {{
+	    {0xd4, 0xe0, 0xb8, 0x1e},
+	    {0x27, 0xbf, 0xb4, 0x41},
+	    {0x11, 0x98, 0x5d, 0x52},
+	    {0xae, 0xf1, 0xe5, 0x30}
+    }};
+    aes::__debug_print_state(state3);
+    aes::shift_rows(state3);
+    aes::__debug_print_state(state3);
+    aes::inv_shift_rows(state3);
+    aes::__debug_print_state(state3);
+
+
     aes:: state state2= {{
 	    {0xd4, 0xe0, 0xb8, 0x1e},
 	    {0xbf, 0xb4, 0x41, 0x27},
