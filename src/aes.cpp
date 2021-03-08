@@ -1,8 +1,5 @@
 #include "aes.hpp"
 
-using aes::byte;
-using aes::state;
-
 void aes::__swap_bytes(state& state, const std::array<byte, 256>& sub_source) {
     for (int r = 0; r < NB; ++r) {
         for (int c = 0; c < NB; ++c) {
