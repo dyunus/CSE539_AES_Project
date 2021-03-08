@@ -20,4 +20,49 @@ auto main(int argc, const char * argv[]) -> int {
         plaintext_file.get(byte);
         plaintext_bytes.push_back(int(byte));
     }
+
+    aes::state state = {{
+        {0x19, 0xa0, 0x9a, 0xe9},
+        {0x3d, 0xf4, 0xc6, 0xf8},
+        {0xe3, 0xe2, 0x8d, 0x48},
+        {0xbe, 0x2b, 0x2a, 0x08}
+    }};
+
+    std::cout << "Testing sub bytes:\n";
+
+    // Sub bytes test (using state from NIST)
+    aes::__debug_print_state(state);
+    aes::sub_bytes(state);
+    aes::__debug_print_state(state);
+    aes::inv_sub_bytes(state);
+    aes::__debug_print_state(state);
+
+
+    std::cout << "Testing Shift Rows:\n";
+
+    // shift rows test (using state from NIST)
+    aes:: state state3= {{
+	    {0xd4, 0xe0, 0xb8, 0x1e},
+	    {0x27, 0xbf, 0xb4, 0x41},
+	    {0x11, 0x98, 0x5d, 0x52},
+	    {0xae, 0xf1, 0xe5, 0x30}
+    }};
+    aes::__debug_print_state(state3);
+    aes::shift_rows(state3);
+    aes::__debug_print_state(state3);
+    aes::inv_shift_rows(state3);
+    aes::__debug_print_state(state3);
+
+
+    aes:: state state2= {{
+	    {0xd4, 0xe0, 0xb8, 0x1e},
+	    {0xbf, 0xb4, 0x41, 0x27},
+	    {0x5d, 0x52, 0x11, 0x98},
+	    {0x30, 0xae, 0xf1, 0xe5}
+    }};
+    aes::__debug_print_state(state2);
+    aes::mix_columns(state2);
+    aes::__debug_print_state(state2);
+    aes::inv_mix_columns(state2);
+    aes::__debug_print_state(state2);
 }
