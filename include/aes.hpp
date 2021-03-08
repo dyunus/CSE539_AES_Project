@@ -117,6 +117,11 @@ namespace aes {
      * @param state 
      */
     void inv_shift_rows(state& state);
+    
+    /**
+     *
+     */
+    void add_round_key(state& currState, state& roundKeyValue);
 
 
     /**
