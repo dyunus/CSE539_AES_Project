@@ -181,6 +181,17 @@ void aes::inv_mix_columns(state& state) {
 	}
 }
 
+    /**
+     *
+     */
+    void aes::add_round_key(state& currState, state& roundKeyValue){
+		//XORs each column of the State with a word from the key schedule
+		for(int i = 0; i < 4; i++){
+			for(int j = 0; j < 4; j++){
+				currState[i][j] ^= roundKeyValue[i][j];
+			}
+		}
+	}
 
 void aes::__debug_print_state(const state& state) {
     for (const auto& row : state) {
