@@ -188,6 +188,60 @@ void aes::inv_mix_columns(state& state) {
 		}
 	}
 
+	std::array<int, 5> aes::splitWord(aes::word word){
+		std::array<int, 5> split;
+		split[0] = (word & 0xff000000UL) >> 24;
+		split[1] = (word & 0x00ff0000UL) >> 16;
+		split[2] = (word & 0x0000ff00UL) >>  8;
+		split[3] = (word & 0x000000ffUL);
+		return split;
+	}
+
+    aes::word aes::buildWord(byte b1, byte b2, byte b3, byte b4){
+        return (b1 << 24) | (b2 << 16) | ( b3 << 8 ) | (b4);
+    }
+
+	aes::word aes::rotword(word word){
+		std::array<int, 5> split = splitWord(word);
+		return buildWord(split[1],split[2],split[3],split[0]);
+	}
+
+	aes::word aes::subword(word word){
+		byte first = (word & 0xff000000UL) >> 24;
+		byte second = (word & 0x00ff0000UL) >> 16;
+		byte third = (word & 0x0000ff00UL) >>  8;
+		byte fourth = (word & 0x000000ffUL);
+        byte b1 = S_BOX.at((first & 0xF0U) + (first & 0xFU));
+		byte b2 = S_BOX.at((second & 0xF0U) + (second & 0xFU));
+		byte b3 = S_BOX.at((third & 0xF0U) + (third & 0xFU));
+		byte b4 = S_BOX.at((fourth & 0xF0U) + (fourth & 0xFU));
+		return buildWord(b1,b2,b3,b4);
+	}
+
+	void aes::key_expansion(std::vector<byte> keyBytes, std::vector<word>& w, int Nk, int Nr){
+		word temp;
+		int i = 0;
+
+		while(i < Nk){
+			w[i] = aes::buildWord(keyBytes[4*i],keyBytes[4*i+1],keyBytes[4*i+2],keyBytes[4*i+3]);
+			i++;
+		}
+
+		i = Nk;
+
+		while(i < NB* (Nr+1)){
+			temp = w[i-1];
+			if(i % Nk == 0){
+				temp = aes::rotword(aes::subword(temp)) ^ Rcon[i/Nk]; //WHAT
+			}
+			else if(Nk > 6 && (i % Nk == 4)){
+				temp = aes::subword(temp);
+			}
+			w[i] = w[i-Nk] ^ temp;
+			i++;
+		}
+	}
+
 
 void aes::__debug_print_state(const state& state) {
     for (const auto& row : state) {

@@ -7,16 +7,19 @@
 
 #include <array>    
 #include <cstdint>  // Standardized types of guaranteed sizes
-
+#include <vector>
 
 // namespace aes
 namespace aes {
     constexpr const int NB = 4; // Column count of the State, constant for this standard
     constexpr const int SBOX_DIM = 16; // S-box utilizes a 16x16 matrix
     
+    
     /// AES specific type-declarations (as defined in NIST)
     using byte = uint8_t;   // Little-endian sequence of 8 bits
     using word = uint32_t;  // Little-endian sequence of 32 bits
+
+constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000, 0x80000000, 0x1b000000, 0x36000000};
 
     // Templated type aliases for data structure abstraction
     template <class T, std::size_t DIM_X, std::size_t DIM_Y>
@@ -138,6 +141,20 @@ namespace aes {
      */
     void inv_mix_columns(state& state);
 
+    std::array<int, 5> splitWord(word word);
+
+    word buildWord(byte b1, byte b2, byte b3, byte b4);
+
+    /**
+     *
+     */
+    void add_round_key(state& currState, state& roundKeyValue);
+
+    void key_expansion(std::vector<byte> keyBytes, std::vector<word>& w, int Nk, int Nr);
+
+    word subword(word word);
+    
+    word rotword(word word);
 
     /**
      * @brief Used to print the current contents of the state, for debugging purposes

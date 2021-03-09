@@ -6,13 +6,17 @@
 
 auto main(int argc, const char * argv[]) -> int {
     // Sanity checks for file input
-    if (argc != 2) {
-        std::cerr << "Must provide a file-input!\n";
+    if (argc != 3) {
+        std::cerr << "Must provide a file-input and keyfile!\n";
         exit(1);
     }
 
     std::vector<aes::byte> plaintext_bytes;
+    std::vector<aes::byte> key_bytes;
     std::ifstream plaintext_file(argv[1], std::ios::binary); // TODO(bailey): I don't know if he'd attack us here, but we might need some sanity checks on file input.
+    std::ifstream key_file(argv[2], std::ios::binary); // TODO(bailey): I don't know if he'd attack us here, but we might need some sanity checks on file input.
+    int Nk = -1;
+    int Nr = -1;
 
     // Read file
     while (plaintext_file) {
@@ -20,6 +24,51 @@ auto main(int argc, const char * argv[]) -> int {
         plaintext_file.get(byte);
         plaintext_bytes.push_back(int(byte));
     }
+
+    // Read key
+    while (key_file) {
+        char byte{};
+        key_file.get(byte);
+        key_bytes.push_back(int(byte));
+    }
+
+    //appears our way of reading a file appends a 0 at the end uncessarily, this trims it as a quick dirty patch
+    plaintext_bytes.pop_back();
+    key_bytes.pop_back();
+
+    //determine Nk and Nr
+    if(key_bytes.size() == 16){
+        Nk = 4;
+        Nr = 10;
+    }
+
+    else if(key_bytes.size() == 24){
+        Nk = 6;
+        Nr = 12;
+    }
+
+    else if(key_bytes.size() == 32){
+        Nk = 8;
+        Nr = 14;
+    }
+
+    else{
+        std::cerr << "Invalid Key Length for AES!\n";
+        exit(1);
+    }
+
+    //create a word vector
+    std::vector<aes::word> w(aes::NB*(Nr+1));
+
+
+    aes::key_expansion(key_bytes,w, Nk, Nr);
+
+    //checking if key expansion is correct for a 256 bit key:
+    // for(int i = 0; i <= 59; i++){
+    //     printf("0x%02x \n", w[i]);
+    // }
+    
+    
 
     aes::state state = {{
         {0x19, 0xa0, 0x9a, 0xe9},
