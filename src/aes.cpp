@@ -207,14 +207,11 @@ void aes::inv_mix_columns(state& state) {
 	}
 
 	aes::word aes::subword(word word){
-		byte first = (word & 0xff000000UL) >> 24;
-		byte second = (word & 0x00ff0000UL) >> 16;
-		byte third = (word & 0x0000ff00UL) >>  8;
-		byte fourth = (word & 0x000000ffUL);
-        byte b1 = S_BOX.at((first & 0xF0U) + (first & 0xFU));
-		byte b2 = S_BOX.at((second & 0xF0U) + (second & 0xFU));
-		byte b3 = S_BOX.at((third & 0xF0U) + (third & 0xFU));
-		byte b4 = S_BOX.at((fourth & 0xF0U) + (fourth & 0xFU));
+		std::array<int, 5> split = splitWord(word);
+        byte b1 = S_BOX.at((split[0] & 0xF0U) + (split[0] & 0xFU));
+		byte b2 = S_BOX.at((split[1] & 0xF0U) + (split[1] & 0xFU));
+		byte b3 = S_BOX.at((split[2] & 0xF0U) + (split[2] & 0xFU));
+		byte b4 = S_BOX.at((split[3] & 0xF0U) + (split[3] & 0xFU));
 		return buildWord(b1,b2,b3,b4);
 	}
 
@@ -232,7 +229,7 @@ void aes::inv_mix_columns(state& state) {
 		while(i < NB* (Nr+1)){
 			temp = w[i-1];
 			if(i % Nk == 0){
-				temp = aes::rotword(aes::subword(temp)) ^ Rcon[i/Nk]; //WHAT
+				temp = aes::rotword(aes::subword(temp)) ^ Rcon[i/Nk];
 			}
 			else if(Nk > 6 && (i % Nk == 4)){
 				temp = aes::subword(temp);

@@ -63,11 +63,11 @@ auto main(int argc, const char * argv[]) -> int {
 
     aes::key_expansion(key_bytes,w, Nk, Nr);
 
-    //checking if key expansion is correct for a 256 bit key:
-    // for(int i = 0; i <= 59; i++){
-    //     printf("0x%02x \n", w[i]);
-    // }
-    
+    //checking if key expansion is correct for a 128,192, 256 bit key:
+    int expand = (Nk == 4) ? 43 : (Nk == 6) ? 51 : 59; 
+    for(int i = 0; i <= expand; i++){
+        printf("0x%02x \n", w[i]);
+    }
     
 
     aes::state state = {{
