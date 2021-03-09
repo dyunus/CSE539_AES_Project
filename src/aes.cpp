@@ -18,11 +18,8 @@ void aes::inv_sub_bytes(state& state) {
 }
 
 void aes::shift_rows(state& state) {
-    //TODO
-	byte temp;
-
 	//shift row 1 
-	temp = state[1][0];
+	byte temp = state[1][0];
 	state[1][0] = state[1][1];
 	state[1][1] = state[1][2];
 	state[1][2] = state[1][3];
@@ -48,10 +45,8 @@ void aes::shift_rows(state& state) {
 }
 
 void aes::inv_shift_rows(state& state) {
-    byte temp;
-
 	//inverse shift row 1 
-	temp = state[1][3];
+	byte temp = state[1][3];
 	state[1][3] = state[1][2];
 	state[1][2] = state[1][1];
 	state[1][1] = state[1][0];
@@ -188,8 +183,8 @@ void aes::inv_mix_columns(state& state) {
 		}
 	}
 
-	std::array<int, 5> aes::splitWord(aes::word word){
-		std::array<int, 5> split;
+	auto aes::splitWord(word word) -> std::array<int, 4>{
+		std::array<int, 4> split;
 		split[0] = (word & 0xff000000UL) >> 24;
 		split[1] = (word & 0x00ff0000UL) >> 16;
 		split[2] = (word & 0x0000ff00UL) >>  8;
@@ -197,17 +192,17 @@ void aes::inv_mix_columns(state& state) {
 		return split;
 	}
 
-    aes::word aes::buildWord(byte b1, byte b2, byte b3, byte b4){
+    auto aes::buildWord(byte b1, byte b2, byte b3, byte b4) -> aes::word{
         return (b1 << 24) | (b2 << 16) | ( b3 << 8 ) | (b4);
     }
 
-	aes::word aes::rotword(word word){
-		std::array<int, 5> split = splitWord(word);
+	auto aes::rotword(word word) -> aes::word{
+		std::array<int, 4> split = splitWord(word);
 		return buildWord(split[1],split[2],split[3],split[0]);
 	}
 
-	aes::word aes::subword(word word){
-		std::array<int, 5> split = splitWord(word);
+	auto aes::subword(word word) -> aes::word{
+		std::array<int, 4> split = splitWord(word);
         byte b1 = S_BOX.at((split[0] & 0xF0U) + (split[0] & 0xFU));
 		byte b2 = S_BOX.at((split[1] & 0xF0U) + (split[1] & 0xFU));
 		byte b3 = S_BOX.at((split[2] & 0xF0U) + (split[2] & 0xFU));
@@ -216,7 +211,7 @@ void aes::inv_mix_columns(state& state) {
 	}
 
 	void aes::key_expansion(std::vector<byte> keyBytes, std::vector<word>& w, int Nk, int Nr){
-		word temp;
+		word temp = -1;
 		int i = 0;
 
 		while(i < Nk){

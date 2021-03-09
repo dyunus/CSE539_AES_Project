@@ -14,7 +14,7 @@ auto main(int argc, const char * argv[]) -> int {
     std::vector<aes::byte> plaintext_bytes;
     std::vector<aes::byte> key_bytes;
     std::ifstream plaintext_file(argv[1], std::ios::binary); // TODO(bailey): I don't know if he'd attack us here, but we might need some sanity checks on file input.
-    std::ifstream key_file(argv[2], std::ios::binary); // TODO(bailey): I don't know if he'd attack us here, but we might need some sanity checks on file input.
+    std::ifstream key_file(argv[2], std::ios::binary);
     int Nk = -1;
     int Nr = -1;
 
@@ -37,36 +37,23 @@ auto main(int argc, const char * argv[]) -> int {
     key_bytes.pop_back();
 
     //determine Nk and Nr
-    if(key_bytes.size() == 16){
-        Nk = 4;
-        Nr = 10;
-    }
+    if(key_bytes.size() == 16){Nk = 4; Nr = 10;}
 
-    else if(key_bytes.size() == 24){
-        Nk = 6;
-        Nr = 12;
-    }
+    else if(key_bytes.size() == 24){Nk = 6;Nr = 12;}
 
-    else if(key_bytes.size() == 32){
-        Nk = 8;
-        Nr = 14;
-    }
+    else if(key_bytes.size() == 32){Nk = 8;Nr = 14;}
 
-    else{
-        std::cerr << "Invalid Key Length for AES!\n";
-        exit(1);
-    }
+    else{std::cerr << "Invalid Key Length for AES!\n"; exit(1);}
 
-    //create a word vector
-    std::vector<aes::word> w(aes::NB*(Nr+1));
+    //create a vector to store expanded key
+    std::vector<aes::word> expandedKey(aes::NB*(Nr+1));
 
+    aes::key_expansion(key_bytes, expandedKey, Nk, Nr);
 
-    aes::key_expansion(key_bytes,w, Nk, Nr);
-
-    //checking if key expansion is correct for a 128,192, 256 bit key:
+    //debug statemetns to confirm if key expansion is correct for a 128,192, 256 bit key:
     int expand = (Nk == 4) ? 43 : (Nk == 6) ? 51 : 59; 
     for(int i = 0; i <= expand; i++){
-        printf("0x%02x \n", w[i]);
+        printf("0x%02x \n", expandedKey[i]);
     }
     
 
@@ -102,6 +89,7 @@ auto main(int argc, const char * argv[]) -> int {
     aes::inv_shift_rows(state3);
     aes::__debug_print_state(state3);
 
+    std::cout << "Testing Mix Columns:\n";
 
     aes:: state state2= {{
 	    {0xd4, 0xe0, 0xb8, 0x1e},
@@ -115,7 +103,7 @@ auto main(int argc, const char * argv[]) -> int {
     aes::inv_mix_columns(state2);
     aes::__debug_print_state(state2);
 
-
+    std::cout << "Testing Add Round Key:\n";
     aes:: state state4= {{
 	    {0x04, 0xe0, 0x48, 0x28},
 	    {0x66, 0xcb, 0xf8, 0x06},

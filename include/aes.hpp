@@ -122,12 +122,6 @@ constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000,
     void inv_shift_rows(state& state);
     
     /**
-     *
-     */
-    void add_round_key(state& currState, state& roundKeyValue);
-
-
-    /**
      * @brief 
      * 
      * @param state 
@@ -141,9 +135,22 @@ constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000,
      */
     void inv_mix_columns(state& state);
 
-    std::array<int, 5> splitWord(word word);
-
-    word buildWord(byte b1, byte b2, byte b3, byte b4);
+    /**
+     * @brief Splits a 32bit word into an array of 4 8bit bytes
+     * 
+     * @param word: Reference to word to split into bytes 
+     */
+    auto splitWord(word word) -> std::array<int, 4>;
+    
+    /**
+     * @brief merge 4 given bytes into a single 32bit word
+     * 
+     * @param b1: First byte in new word
+     * @param b2: Second byte in new word
+     * @param b3: Third byte in new word
+     * @param b4: Last byte in new word
+     */
+    auto buildWord(byte b1, byte b2, byte b3, byte b4) -> aes::word;
 
     /**
      *
@@ -152,9 +159,19 @@ constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000,
 
     void key_expansion(std::vector<byte> keyBytes, std::vector<word>& w, int Nk, int Nr);
 
-    word subword(word word);
+    /**
+     * @brief Performs a substition of a word using the Sbox
+     * 
+     * @param word: Reference to word being substituded
+     */
+    auto subword(word word) -> aes::word;
     
-    word rotword(word word);
+    /**
+     * @brief Performs a rotation of a 32bit word as such: b0,b1,b2,b3 -> b1,b2,b3,b0
+     * 
+     * @param word: Reference to 32bit word being operated on
+     */
+    auto rotword(word word) -> aes::word;
 
     /**
      * @brief Used to print the current contents of the state, for debugging purposes
