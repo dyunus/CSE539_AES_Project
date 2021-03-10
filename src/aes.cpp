@@ -86,35 +86,21 @@ auto aes::__field_multiply_by_2(byte s) -> aes::byte {
 }
 
 
-auto aes::__field_multiply(byte s, int num) -> aes::byte {
+auto aes::__field_multiply(byte s, uint8_t num) -> aes::byte {
 	
 	byte result = s;
-	if (num == 9){
-		byte temp = __field_multiply_by_2(s);
-		temp = __field_multiply_by_2(temp);
-		temp = __field_multiply_by_2(temp);
-		result = temp ^ s;
+	std::vector<int> multiplication_order;
+	while (num >1){
+		if(num % 2 == 1)
+			multiplication_order.push_back(1);
+		multiplication_order.push_back(2);
+		num = num/2;
 	}
-	else if (num == 11){
-		byte temp = __field_multiply_by_2(s);
-		temp = __field_multiply_by_2(temp);
-		temp = temp ^ s;
-		temp = __field_multiply_by_2(temp);
-		result = temp ^ s;
-	}
-	else if (num == 13){
-		byte temp = __field_multiply_by_2(s);
-		temp = temp ^ s;
-		temp = __field_multiply_by_2(temp);
-		temp = __field_multiply_by_2(temp);
-		result = temp ^ s;
-	}
-	else if (num==14){
-		byte temp = __field_multiply_by_2(s);
-		temp = temp ^ s;
-		temp = __field_multiply_by_2(temp);
-		temp = temp ^ s;
-		result = __field_multiply_by_2(temp);
+	for( int i = multiplication_order.size()-1; i >=0; i--){
+		if(multiplication_order[i] == 2)
+			result = __field_multiply_by_2(result);
+		else if(multiplication_order[i] ==1)
+			result = result ^ s;
 	}
 	return result;
 }
@@ -145,32 +131,31 @@ void aes::mix_columns(state& state) {
 void aes::inv_mix_columns(state& state) {
 	for(int c=0; c<NB; ++c){
 		byte s0 = state[0][c];
-        byte s1 = state[1][c];
-        byte s2 = state[2][c];
-        byte s3 = state[3][c];
-        byte s0_mult9 = __field_multiply(s0, 9);
-        byte s1_mult9 = __field_multiply(s1, 9);
-        byte s2_mult9 = __field_multiply(s2, 9);
-        byte s3_mult9 = __field_multiply(s3, 9);
-        byte s0_multB = __field_multiply(s0, 11);
-        byte s1_multB = __field_multiply(s1, 11);
-        byte s2_multB = __field_multiply(s2, 11);
-        byte s3_multB = __field_multiply(s3, 11);
-		byte s0_multD = __field_multiply(s0, 13);
-		byte s1_multD = __field_multiply(s1, 13);
-		byte s2_multD = __field_multiply(s2, 13);
-		byte s3_multD = __field_multiply(s3, 13);
-		byte s0_multE = __field_multiply(s0, 14);
-		byte s1_multE = __field_multiply(s1, 14);
-		byte s2_multE = __field_multiply(s2, 14);
-		byte s3_multE = __field_multiply(s3, 14);
-        state[0][c] = s0_multE ^ s1_multB ^ s2_multD ^ s3_mult9;
-        state[1][c] = s0_mult9 ^ s1_multE ^ s2_multB ^ s3_multD;
-        state[2][c] = s0_multD ^ s1_mult9 ^ s2_multE ^ s3_multB;
-        state[3][c] = s0_multB ^ s1_multD ^ s2_mult9 ^ s3_multE;
+        	byte s1 = state[1][c];
+        	byte s2 = state[2][c];
+        	byte s3 = state[3][c];
+        	byte s0_mult9 = __field_multiply(s0, 9U);
+        	byte s1_mult9 = __field_multiply(s1, 9U);
+        	byte s2_mult9 = __field_multiply(s2, 9U);
+        	byte s3_mult9 = __field_multiply(s3, 9U);
+        	byte s0_multB = __field_multiply(s0, 0xbU);
+        	byte s1_multB = __field_multiply(s1, 0xbU);
+        	byte s2_multB = __field_multiply(s2, 0xbU);
+        	byte s3_multB = __field_multiply(s3, 0xbU);
+		byte s0_multD = __field_multiply(s0, 0xdU);
+		byte s1_multD = __field_multiply(s1, 0xdU);
+		byte s2_multD = __field_multiply(s2, 0xdU);
+		byte s3_multD = __field_multiply(s3, 0xdU);
+		byte s0_multE = __field_multiply(s0, 0xeU);
+		byte s1_multE = __field_multiply(s1, 0xeU);
+		byte s2_multE = __field_multiply(s2, 0xeU);
+		byte s3_multE = __field_multiply(s3, 0xeU);
+        	state[0][c] = s0_multE ^ s1_multB ^ s2_multD ^ s3_mult9;
+        	state[1][c] = s0_mult9 ^ s1_multE ^ s2_multB ^ s3_multD;
+        	state[2][c] = s0_multD ^ s1_mult9 ^ s2_multE ^ s3_multB;
+        	state[3][c] = s0_multB ^ s1_multD ^ s2_mult9 ^ s3_multE;
 	}
 }
-
     /**
      *
      */
@@ -234,6 +219,138 @@ void aes::inv_mix_columns(state& state) {
 		}
 	}
 
+auto aes:: __get_most_sig_bit(byte s)-> uint8_t{
+        uint8_t sig_bit = 0u;
+         for(uint8_t i =0u; i<8u; i++){
+                 byte temp = s >> i;
+                 if(temp == 1U){
+                         sig_bit = i;
+                 }
+         }
+         return sig_bit;
+}
+
+void aes::__euclidean_algorithm(byte left, byte right, uint8_t sigbit){
+	if( right == 0x00){
+		printf("0x00");
+		return;
+	}
+	if(right == 1U)
+		return;
+	uint8_t quotient = 0U;
+	uint8_t quotient_sig_bit = __get_most_sig_bit(right);
+	uint8_t diff = sigbit - quotient_sig_bit;
+	quotient += 1U << diff;
+	uint8_t remainder = left ^ (right<<diff);
+	uint8_t temp_bit = __get_most_sig_bit(remainder);
+	while(quotient_sig_bit<= temp_bit){
+		diff = temp_bit-quotient_sig_bit;
+		remainder = remainder ^ (right <<diff);
+		quotient += 1U <<diff;
+		temp_bit = __get_most_sig_bit(remainder);
+	}
+	printf("0x%02x = 0x%02x (0x%02x) + 0x%02x\n",left,right,quotient,remainder);
+	__euclidean_algorithm(right, remainder, quotient_sig_bit);
+}
+
+auto aes:: __get_inverse(byte s) -> byte{
+	return __extended_euclidean_algorithm(0x1bU, s, 8U)[1];
+}
+
+auto aes:: __extended_euclidean_algorithm(byte left, byte right, uint8_t sigbit) -> std::array<byte,2>{
+	if( right == 0u){
+		std:: array<byte,2> result = {0U, 0U};
+                return result;
+        }
+        if(right == 1U){
+		std:: array<byte,2> result = {0U,1U};
+                return result;
+	}
+        uint8_t quotient = 0U;
+        uint8_t quotient_sig_bit = __get_most_sig_bit(right);
+        uint8_t diff = sigbit - quotient_sig_bit;
+        quotient += 1U << diff;
+        uint8_t remainder = left ^ (right<<diff);
+        uint8_t temp_bit = __get_most_sig_bit(remainder);
+        while(quotient_sig_bit<= temp_bit){
+                diff = temp_bit-quotient_sig_bit;
+                remainder = remainder ^ (right <<diff);
+                quotient += 1U <<diff;
+                temp_bit = __get_most_sig_bit(remainder);
+        }
+	if(remainder == 0U){
+		std:: array<byte,2> result = {0U,1U};
+                return result;
+	}
+	std::array<byte,2> rt = __extended_euclidean_algorithm(right, remainder, quotient_sig_bit);
+	byte r = rt[1];
+	byte temp = __field_multiply(rt[1], quotient);
+	byte t = temp ^ rt[0];
+	std::array<byte,2> result = {r, t};
+	return result;
+}
+
+
+auto aes:: __get_S_BOX_value(byte s)->byte{
+
+	byte inverse = __get_inverse(s);
+	byte b0 = inverse & 1U;
+	byte b1 = (inverse & 2U)>>1U;
+	byte b2 = (inverse & 4U)>>2U;
+	byte b3 = (inverse & 8U)>>3U;
+	byte b4 = (inverse & 16U)>>4U;
+	byte b5 = (inverse & 32U)>>5U;
+	byte b6 = (inverse & 64U)>>6U;
+	byte b7 = (inverse & 128U)>>7U;
+	byte b_prime0 = b0 ^ b4 ^ b5 ^ b6 ^ b7;
+	byte b_prime1 = b0 ^ b1 ^ b5 ^ b6 ^ b7;
+	byte b_prime2 = b0 ^ b1 ^ b2 ^ b6 ^ b7;
+	byte b_prime3 = b0 ^ b1 ^ b2 ^ b3 ^ b7;
+	byte b_prime4 = b0 ^ b1 ^ b2 ^ b3 ^ b4;
+	byte b_prime5 = b1 ^ b2 ^ b3 ^ b4 ^ b5;
+	byte b_prime6 = b2 ^ b3 ^ b4 ^ b5 ^ b6;
+	byte b_prime7 = b3 ^ b4 ^ b5 ^ b6 ^ b7;
+	byte temp = b_prime0;
+	temp ^= b_prime1 << 1U;
+	temp ^= b_prime2 << 2U;
+	temp ^= b_prime3 << 3U;
+	temp ^= b_prime4 << 4U;
+	temp ^= b_prime5 << 5U;
+	temp ^= b_prime6 << 6U;
+	temp ^= b_prime7 << 7U;
+	byte result = temp ^ 0x63U;
+	return result;
+}
+
+auto aes:: __get_inverse_S_BOX_value(byte s)->byte{
+	byte temp = s ^ 0x63U;
+	byte b0 = temp & 1U;
+        byte b1 = (temp & 2U)>>1U;
+        byte b2 = (temp & 4U)>>2U;
+        byte b3 = (temp & 8U)>>3U;
+        byte b4 = (temp & 16U)>>4U;
+        byte b5 = (temp & 32U)>>5U;
+        byte b6 = (temp & 64U)>>6U;
+        byte b7 = (temp & 128U)>>7U;
+	byte b_prime0 = b2 ^ b5 ^ b7;
+        byte b_prime1 = b0 ^ b3 ^ b6;
+        byte b_prime2 = b1 ^ b4 ^ b7;
+        byte b_prime3 = b0 ^ b2 ^ b5;
+        byte b_prime4 = b1 ^ b3 ^ b6;
+        byte b_prime5 = b2 ^ b4 ^ b7;
+        byte b_prime6 = b0 ^ b3 ^ b5;
+        byte b_prime7 = b1 ^ b4 ^ b6;
+	temp = b_prime0;
+        temp ^= b_prime1 << 1U;
+        temp ^= b_prime2 << 2U;
+        temp ^= b_prime3 << 3U;
+        temp ^= b_prime4 << 4U;
+        temp ^= b_prime5 << 5U;
+        temp ^= b_prime6 << 6U;
+        temp ^= b_prime7 << 7U;
+	byte result = __get_inverse(temp);
+	return result;
+}
 
 void aes::__debug_print_state(const state& state) {
     for (const auto& row : state) {

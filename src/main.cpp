@@ -126,4 +126,24 @@ auto main(int argc, const char * argv[]) -> int {
     aes::__debug_print_state(state4);
     aes::add_round_key(state4,roundKeyValue);
     aes::__debug_print_state(state4);
+
+    aes:: byte b = 0U;
+    for(int i =0; i<256; i++){
+	    aes:: byte sbox = aes::__get_S_BOX_value(b);
+	    printf("0x%02x  ", sbox);
+	    if(i %16 == 15)
+		    printf("\n");
+	    b += 1U;
+    }
+    printf("\n\n");
+    b = 0U;
+    for(int i =0; i<256; i++){
+            aes:: byte sbox = aes::__get_inverse_S_BOX_value(b);
+            printf("0x%02x  ", sbox);
+            if(i %16 == 15)
+                    printf("\n");
+            b += 1U;
+    }
+
+
 }
