@@ -7,16 +7,19 @@
 
 #include <array>    
 #include <cstdint>  // Standardized types of guaranteed sizes
-
+#include <vector>
 
 // namespace aes
 namespace aes {
     constexpr const int NB = 4; // Column count of the State, constant for this standard
     constexpr const int SBOX_DIM = 16; // S-box utilizes a 16x16 matrix
     
+    
     /// AES specific type-declarations (as defined in NIST)
     using byte = uint8_t;   // Little-endian sequence of 8 bits
     using word = uint32_t;  // Little-endian sequence of 32 bits
+
+constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000, 0x80000000, 0x1b000000, 0x36000000};
 
     // Templated type aliases for data structure abstraction
     template <class T, std::size_t DIM_X, std::size_t DIM_Y>
@@ -88,22 +91,22 @@ namespace aes {
 
     
     /**
-     * @brief 
+     * @brief Performs multiplication times x(represented by byte 0x02) in the finite field of polynomials modulo x^8+x^4+x^3+x+1 
      * 
-     * @param s 
-     * @return byte 
+     * @param s : the byte that represents the polynomial in the finite field that will be multiplied by x
+     * @return byte : the result of the multiplication
      */
     auto __field_multiply_by_2(byte s) -> byte;
     
     /**
-     * @brief 
+     * @brief Performs multiplication between two elements in the finite field of polynomials modulo x^8+x^4+x^3+x+1
      * 
-     * @param s 
-     * @param num 
+     * @param s : the byte in that represents a polynomial in the finite field
+     * @param num : another byte tat represents a polynomial in the finite field
      * @return byte 
      */
-    auto __field_multiply(byte s, int num) -> byte;
-
+    auto __field_multiply(byte s, uint8_t num) -> byte;
+    
     /**
      * @brief 
      * 
@@ -119,24 +122,113 @@ namespace aes {
     void inv_shift_rows(state& state);
     
     /**
-     *
-     */
-    void add_round_key(state& currState, state& roundKeyValue);
-
-
-    /**
-     * @brief 
+     * @brief Performs the mix columns AES operation on all the columns of the state
      * 
-     * @param state 
+     * @param state: reference to the AES state being operated upon
      */
     void mix_columns(state& state);
 
     /**
-     * @brief 
+     * @brief  Performs the inverse mix columns AES operation upon all the columns of the state
      * 
-     * @param state 
+     * @param state: reference to the AES state being operated upon
      */
     void inv_mix_columns(state& state);
+
+    /**
+     * @brief Splits a 32bit word into an array of 4 8bit bytes
+     * 
+     * @param word: Reference to word to split into bytes 
+     */
+    auto splitWord(word word) -> std::array<int, 4>;
+    
+    /**
+     * @brief merge 4 given bytes into a single 32bit word
+     * 
+     * @param b1: First byte in new word
+     * @param b2: Second byte in new word
+     * @param b3: Third byte in new word
+     * @param b4: Last byte in new word
+     */
+    auto buildWord(byte b1, byte b2, byte b3, byte b4) -> aes::word;
+
+    /**
+     *
+     */
+    void add_round_key(state& currState, state& roundKeyValue);
+
+    void key_expansion(std::vector<byte> keyBytes, std::vector<word>& w, int Nk, int Nr);
+
+    /**
+     * @brief Performs a substition of a word using the Sbox
+     * 
+     * @param word: Reference to word being substituded
+     */
+    auto subword(word word) -> aes::word;
+    
+    /**
+     * @brief Performs a rotation of a 32bit word as such: b0,b1,b2,b3 -> b1,b2,b3,b0
+     * 
+     * @param word: Reference to 32bit word being operated on
+     */
+    auto rotword(word word) -> aes::word;
+
+    /*
+     *@brief Calculate the position of the most signicant (right-most) bit of the byte given
+     *
+     *@param s: byte being operated upon
+     *@return uint8_t: unsigned integer with the position of the most significant bit
+     */
+    auto __get_most_sig_bit(byte s) -> uint8_t;
+
+
+    /*
+     *@brief Implementation of the Euclidean algorithm which finds the greatest common divisor of two elements. Used for debugging purposes
+     *
+     *@param left: One of the bytes whose greatest common divisor will be found. NOTE, left must be greater than right
+     *@param right: One of the bytes whose greatest common divisor will be found. NOTE, right must be less than left
+     *@param sigbit: Unsigned integer that represents the most significant bit location of left.
+     */
+    void __euclidean_algorithm(byte left, byte right, uint8_t sigbit);
+
+
+    /*
+     *@brief Retrieves the inverse modulo x^8+x^4+x^3+x+1 of the given polynomial
+     *
+     *@param s: byte that represents an element in the finite field modulo x^8+x^4+x^3+x+1
+     *@return byte: the inverse polynomial of the given polynomial given in byte form
+     */
+    auto __get_inverse(byte s) -> byte;
+    
+    
+    /*
+     * @brief Implementation of the Extended Euclidean algorithm which finds r,s such that r(left)+s(right)=gcd(left,right) where gcd is the greatest common divisor
+     *
+     * @param left: One of the bytes whose greatest common divisor will be found. NOTE, left must be greater than right
+     * @param right: One of the bytes whose greatest common divisor will be found. NOTE, right must be less than right
+     * @param sigbit: Unsigned integer that represents the most significant bit location of left.
+     * @return array<byte,2>: Array that contains the value of r in index 0 and the value of s in index 1
+     */
+    auto __extended_euclidean_algorithm(byte left, byte right, uint8_t sigbit) -> std::array<byte,2>;
+
+    
+    /*
+     * @brief Calculates the S-Box value of the given byte
+     *
+     * @param s: Byte whose S-Box value we want to find
+     * @return byte: The S-Box value associated with the given byte
+     */
+    auto __get_S_BOX_value(byte s)->byte;
+
+
+    /*
+     * @brief Calculates the inverse S-Box value of the given byte
+     *
+     * @param s: Byte whose inverse S-Box value we want to find
+     * @return byte: The inverse S-Box value associated with the given byte
+     */
+    auto __get_inverse_S_BOX_value(byte s)->byte;
+
 
 
     /**
