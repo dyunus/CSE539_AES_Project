@@ -173,6 +173,12 @@ constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000,
      */
     auto rotword(word word) -> aes::word;
 
+    auto __spliceKey(int round, std::vector<word> key)-> aes::state;
+
+    void encrypt(int Nr, state& state, std::vector<word> w);
+    
+    void decrypt(int Nr, state& state, std::vector<word> w);    
+    
     /*
      *@brief Calculate the position of the most signicant (right-most) bit of the byte given
      *

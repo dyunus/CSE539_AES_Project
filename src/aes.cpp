@@ -219,6 +219,65 @@ void aes::inv_mix_columns(state& state) {
 		}
 	}
 
+
+auto aes:: __spliceKey(int round, std::vector<word> key)-> aes::state{
+	state roundKey;
+	for(int i=0; i<4; i++){
+		word temp = key[4*round+i];
+		byte b0 = (temp & 0xff000000)>>24U;
+		byte b1 = (temp & 0x00ff0000)>>16U;
+		byte b2 = (temp & 0x0000ff00)>>8U;
+		byte b3 = (temp & 0x000000ff);
+		roundKey[0][i] = b0;
+		roundKey[1][i] = b1;
+		roundKey[2][i] = b2;
+		roundKey[3][i] = b3;
+	}
+	return roundKey;
+}
+
+void aes:: encrypt(int Nr, state& state, std::vector<word> w){
+	aes::state roundKey = __spliceKey(0, w);
+	add_round_key(state, roundKey);
+	__debug_print_state(state);
+	for(int i =1; i < Nr; i++){
+		printf("Round number %d\n",i);
+		sub_bytes(state);
+		__debug_print_state(state);
+		shift_rows(state);
+		__debug_print_state(state);
+		mix_columns(state);
+		__debug_print_state(state);
+		roundKey = __spliceKey(i, w);
+		add_round_key(state, roundKey);
+		__debug_print_state(state);
+	}
+	sub_bytes(state);
+	__debug_print_state(state);
+	shift_rows(state);
+	__debug_print_state(state);
+	roundKey = __spliceKey(Nr, w);
+	add_round_key(state, roundKey);
+}
+
+void aes:: decrypt(int Nr, state& state, std::vector<word> w){
+	aes:: state roundKey = __spliceKey(Nr, w);
+	add_round_key(state, roundKey);
+	inv_shift_rows(state);
+	inv_sub_bytes(state);
+	for(int i = 1; i<Nr; i++){
+		roundKey = __spliceKey(Nr-i, w);
+		add_round_key(state,roundKey);
+		inv_mix_columns(state);
+		inv_shift_rows(state);
+		inv_sub_bytes(state);
+	}
+	roundKey = __spliceKey(0, w);
+	add_round_key(state, roundKey);
+}
+
+
+
 auto aes:: __get_most_sig_bit(byte s)-> uint8_t{
         uint8_t sig_bit = 0u;
          for(uint8_t i =0u; i<8u; i++){

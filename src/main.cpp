@@ -58,92 +58,14 @@ auto main(int argc, const char * argv[]) -> int {
     
 
     aes::state state = {{
-        {0x19, 0xa0, 0x9a, 0xe9},
-        {0x3d, 0xf4, 0xc6, 0xf8},
-        {0xe3, 0xe2, 0x8d, 0x48},
-        {0xbe, 0x2b, 0x2a, 0x08}
+        {0x32, 0x88, 0x31, 0xe0},
+        {0x43, 0x5a, 0x31, 0x37},
+        {0xf6, 0x30, 0x98, 0x07},
+        {0xa8, 0x8d, 0xa2, 0x34}
     }};
 
-    std::cout << "Testing sub bytes:\n";
-
-    // Sub bytes test (using state from NIST)
+    aes::encrypt(Nr, state, expandedKey);
     aes::__debug_print_state(state);
-    aes::sub_bytes(state);
+    aes::decrypt(Nr, state, expandedKey);
     aes::__debug_print_state(state);
-    aes::inv_sub_bytes(state);
-    aes::__debug_print_state(state);
-
-
-    std::cout << "Testing Shift Rows:\n";
-
-    // shift rows test (using state from NIST)
-    aes:: state state3= {{
-	    {0xd4, 0xe0, 0xb8, 0x1e},
-	    {0x27, 0xbf, 0xb4, 0x41},
-	    {0x11, 0x98, 0x5d, 0x52},
-	    {0xae, 0xf1, 0xe5, 0x30}
-    }};
-    aes::__debug_print_state(state3);
-    aes::shift_rows(state3);
-    aes::__debug_print_state(state3);
-    aes::inv_shift_rows(state3);
-    aes::__debug_print_state(state3);
-
-    std::cout << "Testing Mix Columns:\n";
-
-    aes:: state state2= {{
-	    {0xd4, 0xe0, 0xb8, 0x1e},
-	    {0xbf, 0xb4, 0x41, 0x27},
-	    {0x5d, 0x52, 0x11, 0x98},
-	    {0x30, 0xae, 0xf1, 0xe5}
-    }};
-    aes::__debug_print_state(state2);
-    aes::mix_columns(state2);
-    aes::__debug_print_state(state2);
-    aes::inv_mix_columns(state2);
-    aes::__debug_print_state(state2);
-
-    std::cout << "Testing Add Round Key:\n";
-    aes:: state state4= {{
-	    {0x04, 0xe0, 0x48, 0x28},
-	    {0x66, 0xcb, 0xf8, 0x06},
-	    {0x81, 0x19, 0xd3, 0x26},
-	    {0xe5, 0x9a, 0x7a, 0x4c}
-    }};
-
-    //NIST standard shows AddRoundKey() called with a slice of the word schedule array
-    // the slice consists of 4 words
-    //a helper function will need to be made to extract our own slices/round keys
-    aes:: state roundKeyValue= {{
-	    {0xa0, 0x88, 0x23, 0x2a},
-	    {0xfa, 0x54, 0xa3, 0x6c},
-	    {0xfe, 0x2c, 0x39, 0x76},
-	    {0x17, 0xb1, 0x39, 0x05}
-    }};
-    
-    aes::__debug_print_state(state4);
-    aes::add_round_key(state4,roundKeyValue);
-    aes::__debug_print_state(state4);
-    aes::add_round_key(state4,roundKeyValue);
-    aes::__debug_print_state(state4);
-
-    aes:: byte b = 0U;
-    for(int i =0; i<256; i++){
-	    aes:: byte sbox = aes::__get_S_BOX_value(b);
-	    printf("0x%02x  ", sbox);
-	    if(i %16 == 15)
-		    printf("\n");
-	    b += 1U;
-    }
-    printf("\n\n");
-    b = 0U;
-    for(int i =0; i<256; i++){
-            aes:: byte sbox = aes::__get_inverse_S_BOX_value(b);
-            printf("0x%02x  ", sbox);
-            if(i %16 == 15)
-                    printf("\n");
-            b += 1U;
-    }
-
-
 }
