@@ -12,6 +12,7 @@ auto main(int argc, const char * argv[]) -> int {
     }
 
     std::vector<aes::byte> plaintext_bytes;
+    std::vector<std::vector<aes::byte> > plaintext_blocks;
     std::vector<aes::byte> key_bytes;
     std::ifstream plaintext_file(argv[1], std::ios::binary); // TODO(bailey): I don't know if he'd attack us here, but we might need some sanity checks on file input.
     std::ifstream key_file(argv[2], std::ios::binary);
@@ -24,6 +25,39 @@ auto main(int argc, const char * argv[]) -> int {
         plaintext_file.get(byte);
         plaintext_bytes.push_back(int(byte));
     }
+    //appears our way of reading a file appends a 0 at the end uncessarily, this trims it as a quick dirty patch
+    plaintext_bytes.pop_back();
+
+    //Pad File if needed according to PKCS #7
+    bool padding = true; //TODO: replace with a decision based on mode of operation selected
+    if(padding){
+        aes::byte padNum = 128 - (plaintext_bytes.size() % 128);
+        for(int i = 0; i < padNum; i++){
+            plaintext_bytes.push_back(padNum);
+        }
+    }
+
+    //Populate vector of blocks
+    //A new block is created every 128 bytes, it is possible that the final block is not a complete 128 bytes since
+    //not all modes of operation require padding
+    std::vector<aes::byte> new_block;
+    for(int i = 0; i < plaintext_bytes.size(); i++){
+        if(i != 0 && i % 128 == 0){
+            plaintext_blocks.push_back(new_block);
+            new_block.clear();
+        }
+        new_block.push_back(plaintext_bytes[i]);
+    }
+    plaintext_blocks.push_back(new_block);
+
+    //Output each block
+        for(int i = 0; i < plaintext_bytes.size() / 128; i++){
+            std::cout << "BLOCK #" << i << std::endl;
+            for(int j = 0; j < 128; j++){
+                printf("0x%02x  ", plaintext_blocks[i][j]);
+            }
+            std::cout << std::endl;
+    }
 
     // Read key
     while (key_file) {
@@ -33,7 +67,6 @@ auto main(int argc, const char * argv[]) -> int {
     }
 
     //appears our way of reading a file appends a 0 at the end uncessarily, this trims it as a quick dirty patch
-    plaintext_bytes.pop_back();
     key_bytes.pop_back();
 
     //determine Nk and Nr
