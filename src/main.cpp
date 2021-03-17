@@ -28,32 +28,23 @@ auto main(int argc, const char * argv[]) -> int {
     //appears our way of reading a file appends a 0 at the end uncessarily, this trims it as a quick dirty patch
     plaintext_bytes.pop_back();
 
+    std::cout << "PLAINTEXT SIZE: " << plaintext_bytes.size() << std::endl;
+
     //Pad File if needed according to PKCS #7
     bool padding = true; //TODO: replace with a decision based on mode of operation selected
-    if(padding){
-        aes::byte padNum = 128 - (plaintext_bytes.size() % 128);
-        for(int i = 0; i < padNum; i++){
-            plaintext_bytes.push_back(padNum);
-        }
-    }
+    if(padding){aes::pad_plaintext(plaintext_bytes);}
+
+    std::cout << "PLAINTEXT SIZE AFTER POTENTIAL PADDING: " << plaintext_bytes.size() << std::endl;
 
     //Populate vector of blocks
-    //A new block is created every 128 bytes, it is possible that the final block is not a complete 128 bytes since
-    //not all modes of operation require padding
-    std::vector<aes::byte> new_block;
-    for(int i = 0; i < plaintext_bytes.size(); i++){
-        if(i != 0 && i % 128 == 0){
-            plaintext_blocks.push_back(new_block);
-            new_block.clear();
-        }
-        new_block.push_back(plaintext_bytes[i]);
-    }
-    plaintext_blocks.push_back(new_block);
+    //A new block is created every 128 bytes, it is possible that the final block is not a complete 128 bytes since not all modes of operation require padding
+    aes::create_blocks(plaintext_blocks, plaintext_bytes);
 
-    //Output each block
-        for(int i = 0; i < plaintext_bytes.size() / 128; i++){
+
+    //DEBUGGING:Output each block
+        for(int i = 0; i < plaintext_blocks.size(); i++){
             std::cout << "BLOCK #" << i << std::endl;
-            for(int j = 0; j < 128; j++){
+            for(int j = 0; j < plaintext_blocks[i].size(); j++){
                 printf("0x%02x  ", plaintext_blocks[i][j]);
             }
             std::cout << std::endl;
@@ -83,7 +74,7 @@ auto main(int argc, const char * argv[]) -> int {
 
     aes::key_expansion(key_bytes, expandedKey, Nk, Nr);
 
-    //debug statemetns to confirm if key expansion is correct for a 128,192, 256 bit key:
+    //DEBUGGING: confirm if key expansion is correct for a 128,192, 256 bit key:
     int expand = (Nk == 4) ? 43 : (Nk == 6) ? 51 : 59; 
     for(int i = 0; i <= expand; i++){
         printf("0x%02x \n", expandedKey[i]);
