@@ -1,7 +1,8 @@
 set(SOURCES
     ${SOURCES}
+    lookup.s
     main.cpp
-    aes.cpp
+    aes.cpp    
 )
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
