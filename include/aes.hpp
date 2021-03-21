@@ -8,6 +8,7 @@
 #include <array>    
 #include <cstdint>  // Standardized types of guaranteed sizes
 #include <vector>
+#include <iostream>
 
 // namespace aes
 namespace aes {
@@ -156,6 +157,8 @@ constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000,
      *
      */
     void add_round_key(state& currState, state& roundKeyValue);
+
+    auto get_Nk_Nr(int keySize) -> std::array<int, 2>;
 
     void key_expansion(std::vector<byte> keyBytes, std::vector<word>& w, int Nk, int Nr);
 

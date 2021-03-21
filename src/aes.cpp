@@ -195,6 +195,20 @@ void aes::inv_mix_columns(state& state) {
 		return buildWord(b1,b2,b3,b4);
 	}
 
+	auto aes::get_Nk_Nr(int keySize) -> std::array<int, 2>{
+		std::array<int, 2> nk_nr;
+		//determine Nk and Nr
+		if(keySize== 16){nk_nr[0] = 4; nk_nr[1] = 10;}
+
+		else if(keySize == 24){nk_nr[0] = 6;nk_nr[1] = 12;}
+
+		else if(keySize== 32){nk_nr[0] = 8;nk_nr[1] = 14;}
+
+    	else{std::cerr << "Invalid Key Length for AES!\n"; exit(1);}
+
+		return nk_nr;
+	}
+
 	void aes::key_expansion(std::vector<byte> keyBytes, std::vector<word>& w, int Nk, int Nr){
 		word temp = -1;
 		int i = 0;
@@ -239,23 +253,23 @@ auto aes:: __spliceKey(int round, std::vector<word> key)-> aes::state{
 void aes:: encrypt(int Nr, state& state, std::vector<word> w){
 	aes::state roundKey = __spliceKey(0, w);
 	add_round_key(state, roundKey);
-	__debug_print_state(state);
+	//__debug_print_state(state);
 	for(int i =1; i < Nr; i++){
-		printf("Round number %d\n",i);
+		//printf("Round number %d\n",i);
 		sub_bytes(state);
-		__debug_print_state(state);
+		//__debug_print_state(state);
 		shift_rows(state);
-		__debug_print_state(state);
+		//__debug_print_state(state);
 		mix_columns(state);
-		__debug_print_state(state);
+		//__debug_print_state(state);
 		roundKey = __spliceKey(i, w);
 		add_round_key(state, roundKey);
-		__debug_print_state(state);
+		//__debug_print_state(state);
 	}
 	sub_bytes(state);
-	__debug_print_state(state);
+	//__debug_print_state(state);
 	shift_rows(state);
-	__debug_print_state(state);
+	//__debug_print_state(state);
 	roundKey = __spliceKey(Nr, w);
 	add_round_key(state, roundKey);
 }
