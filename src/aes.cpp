@@ -1,24 +1,5 @@
 #include "aes.hpp"
 
-void aes::pad_plaintext(std::vector<aes::byte>& plaintext_bytes){
-		aes::byte padNum = 128 - (plaintext_bytes.size() % 128);
-        for(int i = 0; i < padNum; i++){
-            plaintext_bytes.push_back(padNum);
-        }
-}
-
-void aes::create_blocks(std::vector<std::vector<aes::byte> >& plaintext_blocks,std::vector<aes::byte> plaintext_bytes){
-	std::vector<aes::byte> new_block;
-    for(int i = 0; i < plaintext_bytes.size(); i++){
-        if(i != 0 && i % 128 == 0){
-            plaintext_blocks.push_back(new_block);
-            new_block.clear();
-        }
-        new_block.push_back(plaintext_bytes[i]);
-    }
-    plaintext_blocks.push_back(new_block);
-}
-
 void aes::__swap_bytes(state& state, const std::array<byte, 256>& sub_source) {
     for (int r = 0; r < NB; ++r) {
         for (int c = 0; c < NB; ++c) {

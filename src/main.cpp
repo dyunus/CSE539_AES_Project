@@ -1,4 +1,5 @@
 #include "aes.hpp"
+#include "ciphermodes.hpp"
 #include <fstream>  // File I/O
 #include <iostream>
 #include <string>
@@ -18,7 +19,6 @@ auto main(int argc, const char * argv[]) -> int {
     std::ifstream key_file(argv[2], std::ios::binary);
     int Nk = -1;
     int Nr = -1;
-
     // Read file
     while (plaintext_file) {
         char byte{};
@@ -32,13 +32,13 @@ auto main(int argc, const char * argv[]) -> int {
 
     //Pad File if needed according to PKCS #7
     bool padding = true; //TODO: replace with a decision based on mode of operation selected
-    if(padding){aes::pad_plaintext(plaintext_bytes);}
+    if(padding){ciphermodes::pad_plaintext(plaintext_bytes);}
 
     std::cout << "PLAINTEXT SIZE AFTER POTENTIAL PADDING: " << plaintext_bytes.size() << std::endl;
 
     //Populate vector of blocks
     //A new block is created every 128 bytes, it is possible that the final block is not a complete 128 bytes since not all modes of operation require padding
-    aes::create_blocks(plaintext_blocks, plaintext_bytes);
+    ciphermodes::create_blocks(plaintext_blocks, plaintext_bytes);
 
 
     //DEBUGGING:Output each block
