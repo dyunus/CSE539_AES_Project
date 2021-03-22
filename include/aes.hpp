@@ -5,28 +5,39 @@
  * Defines functionality and data-types required for the implementation of AES
  **/
 
-#include <array>    
-#include <cstdint>  // Standardized types of guaranteed sizes
+#ifdef _WIN32
+#include <bcrypt.h>
+#endif
+
+#include <array>
+#include <cstdint> // Standardized types of guaranteed sizes
 #include <vector>
 
+/**
+ * @brief Used to prevent a cache-based side-channel attack that exploits the time-delta between CPU cache and main memory
+ * Given an index, loads the entire lookup table into registers, selects the requested byte, and clears state
+ * Discussed in Efficient Cache Attacks on AES, and Countermeasures by Eran Tromer, Dag Arne Osvik, and Adi Shamir
+ */
+extern "C" uint8_t no_cache_lookup(uint8_t index, const uint8_t* lookup_table);
+extern "C" void __load_lookup_table(const uint8_t* lookup_table);
 // namespace aes
-namespace aes {
-    constexpr const int NB = 4; // Column count of the State, constant for this standard
+namespace aes
+{
+    constexpr const int NB = 4;        // Column count of the State, constant for this standard
     constexpr const int SBOX_DIM = 16; // S-box utilizes a 16x16 matrix
-    
-    
-    /// AES specific type-declarations (as defined in NIST)
-    using byte = uint8_t;   // Little-endian sequence of 8 bits
-    using word = uint32_t;  // Little-endian sequence of 32 bits
 
-constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000, 0x80000000, 0x1b000000, 0x36000000};
+    /// AES specific type-declarations (as defined in NIST)
+    using byte = uint8_t;  // Little-endian sequence of 8 bits
+    using word = uint32_t; // Little-endian sequence of 32 bits
+
+    constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000, 0x80000000, 0x1b000000, 0x36000000};
 
     // Templated type aliases for data structure abstraction
     template <class T, std::size_t DIM_X, std::size_t DIM_Y>
     using matrix = std::array<std::array<T, DIM_X>, DIM_Y>;
 
     using state = matrix<byte, NB, NB>;
-    
+
     constexpr const std::array<byte, 256> S_BOX = {
         0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
         0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
@@ -64,7 +75,7 @@ constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000,
         0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
         0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d
     };
-
+    
     
     /**
      * @brief Helper function that performs byte substitutions
@@ -72,32 +83,33 @@ constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000,
      * @param state: Reference to AES state being operated upon
      * @param sub_source: Constant reference to source array to use for substitutions
      */
-    void __swap_bytes(state& state, const std::array<byte, 256>& sub_source);
+    void __swap_bytes(state &state, const std::array<byte, 256> &sub_source);
 
     /**
      * @brief Performs a non-linear byte substitution upon each byte within the state using the S-box
      * 
      * @param state: Reference to AES state being operated upon
      */
-    void sub_bytes(state& state);
-    
+    void sub_bytes(state &state);
 
     /**
      * @brief Performs a non-linear byte substitution upon each byte within the state using the Inv-S-box
      * 
      * @param state: Reference to AES state being operated upon
      */
-    void inv_sub_bytes(state& state);
 
-    
+    void inv_sub_bytes(state &state);
+
     /**
      * @brief Performs multiplication times x(represented by byte 0x02) in the finite field of polynomials modulo x^8+x^4+x^3+x+1 
      * 
      * @param s : the byte that represents the polynomial in the finite field that will be multiplied by x
      * @return byte : the result of the multiplication
-     */
+     */    
+
+
     auto __field_multiply_by_2(byte s) -> byte;
-    
+
     /**
      * @brief Performs multiplication between two elements in the finite field of polynomials modulo x^8+x^4+x^3+x+1
      * 
@@ -106,42 +118,42 @@ constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000,
      * @return byte 
      */
     auto __field_multiply(byte s, uint8_t num) -> byte;
-    
-    /**
-     * @brief 
-     * 
-     * @param state 
-     */
-    void shift_rows(state& state);
 
     /**
      * @brief 
      * 
      * @param state 
      */
-    void inv_shift_rows(state& state);
-    
+    void shift_rows(state &state);
+
+    /**
+     * @brief 
+     * 
+     * @param state 
+     */
+    void inv_shift_rows(state &state);
+
     /**
      * @brief Performs the mix columns AES operation on all the columns of the state
      * 
      * @param state: reference to the AES state being operated upon
      */
-    void mix_columns(state& state);
+    void mix_columns(state &state);
 
     /**
      * @brief  Performs the inverse mix columns AES operation upon all the columns of the state
      * 
      * @param state: reference to the AES state being operated upon
      */
-    void inv_mix_columns(state& state);
+    void inv_mix_columns(state &state);
 
     /**
      * @brief Splits a 32bit word into an array of 4 8bit bytes
      * 
      * @param word: Reference to word to split into bytes 
      */
-    auto splitWord(word word) -> std::array<int, 4>;
-    
+    auto splitWord(word word) -> std::array<byte, 4>;
+
     /**
      * @brief merge 4 given bytes into a single 32bit word
      * 
@@ -155,9 +167,9 @@ constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000,
     /**
      *
      */
-    void add_round_key(state& currState, state& roundKeyValue);
+    void add_round_key(state &currState, state &roundKeyValue);
 
-    void key_expansion(std::vector<byte> keyBytes, std::vector<word>& w, int Nk, int Nr);
+    void key_expansion(std::vector<byte> keyBytes, std::vector<word> &w, int Nk, int Nr);
 
     /**
      * @brief Performs a substition of a word using the Sbox
@@ -165,7 +177,7 @@ constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000,
      * @param word: Reference to word being substituded
      */
     auto subword(word word) -> aes::word;
-    
+
     /**
      * @brief Performs a rotation of a 32bit word as such: b0,b1,b2,b3 -> b1,b2,b3,b0
      * 
@@ -181,7 +193,6 @@ constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000,
      */
     auto __get_most_sig_bit(byte s) -> uint8_t;
 
-
     /*
      *@brief Implementation of the Euclidean algorithm which finds the greatest common divisor of two elements. Used for debugging purposes
      *
@@ -191,7 +202,6 @@ constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000,
      */
     void __euclidean_algorithm(byte left, byte right, uint8_t sigbit);
 
-
     /*
      *@brief Retrieves the inverse modulo x^8+x^4+x^3+x+1 of the given polynomial
      *
@@ -199,8 +209,7 @@ constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000,
      *@return byte: the inverse polynomial of the given polynomial given in byte form
      */
     auto __get_inverse(byte s) -> byte;
-    
-    
+
     /*
      * @brief Implementation of the Extended Euclidean algorithm which finds r,s such that r(left)+s(right)=gcd(left,right) where gcd is the greatest common divisor
      *
@@ -209,17 +218,15 @@ constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000,
      * @param sigbit: Unsigned integer that represents the most significant bit location of left.
      * @return array<byte,2>: Array that contains the value of r in index 0 and the value of s in index 1
      */
-    auto __extended_euclidean_algorithm(byte left, byte right, uint8_t sigbit) -> std::array<byte,2>;
+    auto __extended_euclidean_algorithm(byte left, byte right, uint8_t sigbit) -> std::array<byte, 2>;
 
-    
     /*
      * @brief Calculates the S-Box value of the given byte
      *
      * @param s: Byte whose S-Box value we want to find
      * @return byte: The S-Box value associated with the given byte
      */
-    auto __get_S_BOX_value(byte s)->byte;
-
+    auto __get_S_BOX_value(byte s) -> byte;
 
     /*
      * @brief Calculates the inverse S-Box value of the given byte
@@ -227,16 +234,15 @@ constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000,
      * @param s: Byte whose inverse S-Box value we want to find
      * @return byte: The inverse S-Box value associated with the given byte
      */
-    auto __get_inverse_S_BOX_value(byte s)->byte;
-
-
+    auto __get_inverse_S_BOX_value(byte s) -> byte;
 
     /**
      * @brief Used to print the current contents of the state, for debugging purposes
      * 
      * @param state: Constant reference to AES state to be printed
      */
-    void __debug_print_state(const state& state);
+    void __debug_print_state(const state &state);
+
 } // end of namespace aes
 
 #endif

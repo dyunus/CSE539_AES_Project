@@ -8,6 +8,7 @@ set(CMAKE_CXX_CLANG_TIDY
   clang-tidy;
   -header-filter=.;)
 
+set(CMAKE_CXX_FLAGS "-mrdseed")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 set(CMAKE_BUILD_TYPE Debug)
 

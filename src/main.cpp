@@ -1,4 +1,5 @@
 #include "aes.hpp"
+#include "yandom.hpp"
 #include <fstream> // File I/O
 #include <iostream>
 #include <string>
@@ -10,7 +11,7 @@ auto read_binary_file(const char *file_name, std::vector<aes::byte> &vec)
 {
     std::ifstream file(file_name, std::ios::in | std::ios::binary);
 
-    if (!file.good())
+    if (!file.is_open())
     {
         // Was not able to open this file
         std::cerr << "Unable to open " << file_name << "!\n";
@@ -22,8 +23,6 @@ auto read_binary_file(const char *file_name, std::vector<aes::byte> &vec)
     {
         vec.push_back(static_cast<aes::byte>(byte_in));
     }
-
-    file.close();
 }
 auto main(int argc, const char *argv[]) -> int
 {
@@ -149,8 +148,9 @@ auto main(int argc, const char *argv[]) -> int
     {
         aes::byte sbox = aes::__get_S_BOX_value(b);
         printf("0x%02x  ", sbox);
-        if (i % 16 == 15)
+        if (i % 16 == 15) {
             printf("\n");
+        }
         b += 1U;
     }
     printf("\n\n");
@@ -159,8 +159,9 @@ auto main(int argc, const char *argv[]) -> int
     {
         aes::byte sbox = aes::__get_inverse_S_BOX_value(b);
         printf("0x%02x  ", sbox);
-        if (i % 16 == 15)
+        if (i % 16 == 15) {
             printf("\n");
+        }
         b += 1U;
     }
 
