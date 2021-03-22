@@ -4,7 +4,8 @@ void aes::__swap_bytes(state& state, const std::array<byte, 256>& sub_source) {
     for (std::size_t r = 0; r < NB; ++r) {
         for (std::size_t c = 0; c < NB; ++c) {
             byte curr_byte = state[r][c];
-            state[r][c] = sub_source.at((curr_byte & 0xF0U) + (curr_byte & 0xFU));
+            state[r][c] = no_cache_lookup((curr_byte & 0xF0U) + (curr_byte & 0xFU), sub_source.data());
+			// sub_source.at((curr_byte & 0xF0U) + (curr_byte & 0xFU));
         }
     }
 }
@@ -91,16 +92,18 @@ auto aes::__field_multiply(byte s, uint8_t num) -> aes::byte {
 	byte result = s;
 	std::vector<int> multiplication_order;
 	while (num >1){
-		if(num % 2 == 1)
+		if(num % 2 == 1) {
 			multiplication_order.push_back(1);
+		}
 		multiplication_order.push_back(2);
 		num = num/2;
 	}
-	for( int i = multiplication_order.size()-1; i >=0; i--){
-		if(multiplication_order[i] == 2)
+	for(long i = static_cast<long>(multiplication_order.size()-1); i >=0; i--){
+		if(multiplication_order[i] == 2) {
 			result = __field_multiply_by_2(result);
-		else if(multiplication_order[i] ==1)
+		} else if(multiplication_order[i] ==1) {
 			result = result ^ s;
+		}
 	}
 	return result;
 }
@@ -168,26 +171,26 @@ void aes::inv_mix_columns(state& state) {
 		}
 	}
 
-	auto aes::splitWord(word word) -> std::array<int, 4>{
-		std::array<int, 4> split;
-		split[0] = (word & 0xff000000UL) >> 24;
-		split[1] = (word & 0x00ff0000UL) >> 16;
-		split[2] = (word & 0x0000ff00UL) >>  8;
+	auto aes::splitWord(word word) -> std::array<byte, 4>{
+		std::array<byte, 4> split{};
+		split[0] = (word & 0xff000000UL) >> 24U;
+		split[1] = (word & 0x00ff0000UL) >> 16U;
+		split[2] = (word & 0x0000ff00UL) >>  8U;
 		split[3] = (word & 0x000000ffUL);
 		return split;
 	}
 
     auto aes::buildWord(byte b1, byte b2, byte b3, byte b4) -> aes::word{
-        return (b1 << 24) | (b2 << 16) | ( b3 << 8 ) | (b4);
+        return (b1 << 24U) | (b2 << 16U) | (b3 << 8U) | (b4);
     }
 
 	auto aes::rotword(word word) -> aes::word{
-		std::array<int, 4> split = splitWord(word);
+		auto split = splitWord(word);
 		return buildWord(split[1],split[2],split[3],split[0]);
 	}
 
 	auto aes::subword(word word) -> aes::word{
-		std::array<int, 4> split = splitWord(word);
+		auto split = splitWord(word);
         byte b1 = S_BOX.at((split[0] & 0xF0U) + (split[0] & 0xFU));
 		byte b2 = S_BOX.at((split[1] & 0xF0U) + (split[1] & 0xFU));
 		byte b3 = S_BOX.at((split[2] & 0xF0U) + (split[2] & 0xFU));
@@ -223,7 +226,7 @@ void aes::inv_mix_columns(state& state) {
 		while(i < NB* (Nr+1)){
 			temp = w[i-1];
 			if(i % Nk == 0){
-				temp = aes::rotword(aes::subword(temp)) ^ Rcon[i/Nk];
+				temp = aes::rotword(aes::subword(temp)) ^ Rcon.at(i/Nk);
 			}
 			else if(Nk > 6 && (i % Nk == 4)){
 				temp = aes::subword(temp);
@@ -293,8 +296,8 @@ void aes:: decrypt(int Nr, state& state, std::vector<word> w){
 
 
 auto aes:: __get_most_sig_bit(byte s)-> uint8_t{
-        uint8_t sig_bit = 0u;
-         for(uint8_t i =0u; i<8u; i++){
+        uint8_t sig_bit = 0U;
+         for(uint8_t i = 0U; i< 8U; i++){
                  byte temp = s >> i;
                  if(temp == 1U){
                          sig_bit = i;
@@ -308,8 +311,10 @@ void aes::__euclidean_algorithm(byte left, byte right, uint8_t sigbit){
 		printf("0x00");
 		return;
 	}
-	if(right == 1U)
+	if(right == 1U) {
 		return;
+	}
+
 	uint8_t quotient = 0U;
 	uint8_t quotient_sig_bit = __get_most_sig_bit(right);
 	uint8_t diff = sigbit - quotient_sig_bit;
@@ -331,7 +336,7 @@ auto aes:: __get_inverse(byte s) -> byte{
 }
 
 auto aes:: __extended_euclidean_algorithm(byte left, byte right, uint8_t sigbit) -> std::array<byte,2>{
-	if( right == 0u){
+	if( right == 0U){
 		std:: array<byte,2> result = {0U, 0U};
                 return result;
         }
@@ -434,5 +439,3 @@ void aes::__debug_print_state(const state& state) {
     }
     printf("\n");
 }
-
-
