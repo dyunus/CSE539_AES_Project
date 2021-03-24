@@ -9,7 +9,7 @@
 #else
 #include <cpuid.h>
 
-void cpuid(unsigned int info[4], int InfoType);
+void cpuid(unsigned int info[4], int InfoType); // NOLINT(hicpp-avoid-c-arrays, cppcoreguidelines-avoid-c-arrays, modernize-avoid-c-arrays) Interacting with Kernel C, we don't have a say in this case
 #endif // CPUID
 
 
@@ -33,13 +33,13 @@ constexpr const uint64_t RDSEED_FLAG = 0x40000; // 18th bit asserted
 template<std::size_t RAND_LEN>
 auto __rdseed_rand() -> std::array<aes::byte, RAND_LEN / 8> {
     // Sadly Intel Intrinsics insists on using ull over uint64_t. 
-    static_assert(sizeof(uint64_t) == sizeof(unsigned long long), "ULL must be 64bit! Change compilers.");    
+    static_assert(sizeof(uint64_t) == sizeof(unsigned long long), "ULL must be 64bit! Change compilers.");  // NOLINT   Intel intrinsics require ULL, not uint64_t    
 
     aes::byte keygen_rounds = RAND_LEN / 64;
     std::array<aes::byte, RAND_LEN / 8> key_bytes{};
 
     for (int r = 0; r < keygen_rounds; ++r) {     
-        unsigned long long key_portion{};
+        unsigned long long key_portion{}; // NOLINT   Intel intrinsics require ULL, not uint64_t 
         assert(_rdseed64_step(&key_portion)); // Returns 0 on failure (sometimes it's too fast)
 
         // Extract 8 bits from 64-bit random key-chunk
@@ -136,7 +136,7 @@ auto randgen() -> std::array<aes::byte, RAND_LEN / 8> {
     cpuid(cpu_info.data(), 0);
 
     // If RDSEED is supported on an AMD or Intel processor, EBX bit 18 will be set.
-    key_bytes = (cpu_info[1] & RDSEED_FLAG != 0) ? __rdseed_rand<RAND_LEN>() : __os_randgen<RAND_LEN>();
+    key_bytes = ((cpu_info[1] & RDSEED_FLAG) != 0) ? __rdseed_rand<RAND_LEN>() : __os_randgen<RAND_LEN>();
 
     assert(key_bytes.size() == RAND_LEN / sizeof(uint64_t));
     return key_bytes;

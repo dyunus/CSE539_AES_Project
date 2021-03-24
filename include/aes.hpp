@@ -19,13 +19,14 @@
  * Given an index, loads the entire lookup table into registers, selects the requested byte, and clears state
  * Discussed in Efficient Cache Attacks on AES, and Countermeasures by Eran Tromer, Dag Arne Osvik, and Adi Shamir
  */
-extern "C" uint8_t no_cache_lookup(uint8_t index, const uint8_t* lookup_table);
+extern "C" uint8_t no_cache_lookup(uint8_t index, const uint8_t* lookup_table); //  NOLINT(modernize-use-trailing-return-type)  Come on linter, this is C...
 extern "C" void __load_lookup_table(const uint8_t* lookup_table);
+
 // namespace aes
 namespace aes
 {
-    constexpr const int NB = 4;        // Column count of the State, constant for this standard
-    constexpr const int SBOX_DIM = 16; // S-box utilizes a 16x16 matrix
+    constexpr const unsigned int NB = 4;        // Column count of the State, constant for this standard
+    constexpr const unsigned int SBOX_DIM = 16; // S-box utilizes a 16x16 matrix
 
     /// AES specific type-declarations (as defined in NIST)
     using byte = uint8_t;  // Little-endian sequence of 8 bits
@@ -188,11 +189,11 @@ namespace aes
      */
     auto rotword(word word) -> aes::word;
 
-    auto __spliceKey(int round, std::vector<word> key)-> aes::state;
+    auto __spliceKey(int round, const std::vector<word>& key)-> aes::state;
 
-    void encrypt(int Nr, state& state, std::vector<word> w);
+    void encrypt(int Nr, state& state, const std::vector<word>& w);
     
-    void decrypt(int Nr, state& state, std::vector<word> w);    
+    void decrypt(int Nr, state& state, const std::vector<word>& w);    
     
     /*
      *@brief Calculate the position of the most signicant (right-most) bit of the byte given

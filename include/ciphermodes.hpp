@@ -16,7 +16,7 @@ namespace ciphermodes {
      */
     void pad_plaintext(std::vector<aes::byte>& plaintext_bytes);
 
-    void unpad_ciphertext(std::vector<aes::byte>& plaintext_bytes);
+    void unpad_ciphertext(std::vector<aes::byte>& ciphertext_bytes);
 
     /**
      * @brief Populate vector of blocks;
@@ -29,7 +29,7 @@ namespace ciphermodes {
     auto create_blocks(std::vector<aes::byte> plaintext_bytes) -> std::vector<std::vector<aes::byte> >;
 
 
-    auto merge_blocks(std::vector<std::vector<aes::byte> > ciphertext_blocks) -> std::vector<aes::byte>;
+    auto merge_blocks(const std::vector<std::vector<aes::byte>>& ciphertext_blocks) -> std::vector<aes::byte>;
 
     auto convert_block_to_state(std::vector<aes::byte> block) -> aes::state;
 
@@ -42,8 +42,8 @@ namespace ciphermodes {
      * @param expanded_key: Vector containing the bytes of the expanded key
      * @param number_rounds: number of rounds that AES will perform
      */
-    auto ECB_Encrypt(std::vector<aes::byte> plaintext_bytes, std::vector<aes::byte> key_bytes) -> std::vector<aes::byte>;
-    auto ECB_Decrypt(std::vector<aes::byte> plaintext_bytes, std::vector<aes::byte> key_bytes) -> std::vector<aes::byte>;
+    auto ECB_Encrypt(std::vector<aes::byte> plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
+    auto ECB_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
 } // end of namespace ciphermodes
 
 #endif

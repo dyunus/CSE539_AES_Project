@@ -98,7 +98,7 @@ auto aes::__field_multiply(byte s, uint8_t num) -> aes::byte {
 		multiplication_order.push_back(2);
 		num = num/2;
 	}
-	for(long i = static_cast<long>(multiplication_order.size()-1); i >=0; i--){
+	for(auto i = static_cast<int64_t>(multiplication_order.size()-1); i >=0; i--){
 		if(multiplication_order[i] == 2) {
 			result = __field_multiply_by_2(result);
 		} else if(multiplication_order[i] ==1) {
@@ -110,23 +110,23 @@ auto aes::__field_multiply(byte s, uint8_t num) -> aes::byte {
 
 
 void aes::mix_columns(state& state) {
-	for(int c =0; c<NB; ++c){
+	for(std::size_t c = 0; c<NB; ++c){
 		byte s0 = state[0][c];
 		byte s1 = state[1][c];
 		byte s2 = state[2][c];
 		byte s3 = state[3][c];
-		byte s0_mult2 = __field_multiply_by_2(s0);
-		byte s1_mult2 = __field_multiply_by_2(s1);
-		byte s2_mult2 = __field_multiply_by_2(s2);
-		byte s3_mult2 = __field_multiply_by_2(s3);
+		byte s0_mult2 = static_cast<byte>(__field_multiply_by_2(s0));
+		byte s1_mult2 = static_cast<byte>(__field_multiply_by_2(s1));
+		byte s2_mult2 = static_cast<byte>(__field_multiply_by_2(s2));
+		byte s3_mult2 = static_cast<byte>(__field_multiply_by_2(s3));
 		byte s0_mult3 = s0_mult2 ^ s0;
 		byte s1_mult3 = s1_mult2 ^ s1;
 		byte s2_mult3 = s2_mult2 ^ s2;
 		byte s3_mult3 = s3_mult2 ^ s3;
-		state[0][c] = s0_mult2 ^ s1_mult3 ^ s2 ^ s3;
-		state[1][c] = s0 ^ s1_mult2 ^ s2_mult3 ^ s3;
-		state[2][c] = s0 ^ s1 ^ s2_mult2 ^ s3_mult3;
-		state[3][c] = s0_mult3 ^ s1 ^ s2 ^ s3_mult2;
+		state[0][c] = static_cast<byte>(s0_mult2 ^ s1_mult3) ^ static_cast<byte>(s2 ^ s3);
+		state[1][c] = static_cast<byte>(s0 ^ s1_mult2) ^ static_cast<byte>(s2_mult3 ^ s3);
+		state[2][c] = static_cast<byte>(s0 ^ s1) ^ static_cast<byte>(s2_mult2 ^ s3_mult3);
+		state[3][c] = static_cast<byte>(s0_mult3 ^ s1) ^ static_cast<byte>(s2 ^ s3_mult2);
 	}
 }
 
@@ -153,10 +153,10 @@ void aes::inv_mix_columns(state& state) {
 		byte s1_multE = __field_multiply(s1, 0xeU);
 		byte s2_multE = __field_multiply(s2, 0xeU);
 		byte s3_multE = __field_multiply(s3, 0xeU);
-        	state[0][c] = s0_multE ^ s1_multB ^ s2_multD ^ s3_mult9;
-        	state[1][c] = s0_mult9 ^ s1_multE ^ s2_multB ^ s3_multD;
-        	state[2][c] = s0_multD ^ s1_mult9 ^ s2_multE ^ s3_multB;
-        	state[3][c] = s0_multB ^ s1_multD ^ s2_mult9 ^ s3_multE;
+        	state[0][c] = static_cast<byte>(s0_multE ^ s1_multB) ^ static_cast<byte>(s2_multD ^ s3_mult9);
+        	state[1][c] = static_cast<byte>(s0_mult9 ^ s1_multE) ^ static_cast<byte>(s2_multB ^ s3_multD);
+        	state[2][c] = static_cast<byte>(s0_multD ^ s1_mult9) ^ static_cast<byte>(s2_multE ^ s3_multB);
+        	state[3][c] = static_cast<byte>(s0_multB ^ s1_multD) ^ static_cast<byte>(s2_mult9 ^ s3_multE);
 	}
 }
     /**
@@ -181,7 +181,7 @@ void aes::inv_mix_columns(state& state) {
 	}
 
     auto aes::buildWord(byte b1, byte b2, byte b3, byte b4) -> aes::word{
-        return (b1 << 24U) | (b2 << 16U) | (b3 << 8U) | (b4);
+        return (b1 << 24U) | (b2 << 16U) | (b3 << 8U) | (b4);	// NOLINT(hicpp-signed-bitwise) : This is using proper unsigned conventions, but is too complicated for the linter to understand
     }
 
 	auto aes::rotword(word word) -> aes::word{
@@ -198,21 +198,24 @@ void aes::inv_mix_columns(state& state) {
 		return buildWord(b1,b2,b3,b4);
 	}
 
-	auto aes::get_Nk_Nr(int keySize) -> std::array<int, 2>{
-		std::array<int, 2> nk_nr;
+	auto aes::get_Nk_Nr(int keySize) -> std::array<int, 2> {
+		std::array<int, 2> nk_nr{};
 		//determine Nk and Nr
-		if(keySize== 16){nk_nr[0] = 4; nk_nr[1] = 10;}
-
-		else if(keySize == 24){nk_nr[0] = 6;nk_nr[1] = 12;}
-
-		else if(keySize== 32){nk_nr[0] = 8;nk_nr[1] = 14;}
-
-    	else{std::cerr << "Invalid Key Length for AES!\n"; exit(1);}
+		if(keySize== 16) {
+			nk_nr[0] = 4; nk_nr[1] = 10;
+		} else if(keySize == 24) { 
+			nk_nr[0] = 6;nk_nr[1] = 12;
+		} else if(keySize== 32) {
+			nk_nr[0] = 8;nk_nr[1] = 14;
+		} else {
+			std::cerr << "Invalid Key Length for AES!\n";
+			exit(1);
+		}
 
 		return nk_nr;
 	}
 
-	void aes::key_expansion(std::vector<byte> keyBytes, std::vector<word>& w, int Nk, int Nr){
+	void aes::key_expansion(std::vector<byte> keyBytes, std::vector<word>& w, int Nk, int Nr) {
 		word temp = -1;
 		int i = 0;
 
@@ -237,14 +240,14 @@ void aes::inv_mix_columns(state& state) {
 	}
 
 
-auto aes:: __spliceKey(int round, std::vector<word> key)-> aes::state{
+auto aes:: __spliceKey(int round, const std::vector<word>& key)-> aes::state{
 	state roundKey;
-	for(int i=0; i<4; i++){
+	for(std::size_t i=0; i<4; i++){
 		word temp = key[4*round+i];
-		byte b0 = (temp & 0xff000000)>>24U;
-		byte b1 = (temp & 0x00ff0000)>>16U;
-		byte b2 = (temp & 0x0000ff00)>>8U;
-		byte b3 = (temp & 0x000000ff);
+		byte b0 = (temp & 0xff000000U)>>24U;
+		byte b1 = (temp & 0x00ff0000U)>>16U; 
+		byte b2 = (temp & 0x0000ff00U)>>8U;
+		byte b3 = (temp & 0x000000ffU);
 		roundKey[0][i] = b0;
 		roundKey[1][i] = b1;
 		roundKey[2][i] = b2;
@@ -253,7 +256,7 @@ auto aes:: __spliceKey(int round, std::vector<word> key)-> aes::state{
 	return roundKey;
 }
 
-void aes:: encrypt(int Nr, state& state, std::vector<word> w){
+void aes::encrypt(int Nr, state& state, const std::vector<word>& w){
 	aes::state roundKey = __spliceKey(0, w);
 	add_round_key(state, roundKey);
 	//__debug_print_state(state);
@@ -277,7 +280,7 @@ void aes:: encrypt(int Nr, state& state, std::vector<word> w){
 	add_round_key(state, roundKey);
 }
 
-void aes:: decrypt(int Nr, state& state, std::vector<word> w){
+void aes::decrypt(int Nr, state& state, const std::vector<word>& w){
 	aes:: state roundKey = __spliceKey(Nr, w);
 	add_round_key(state, roundKey);
 	inv_shift_rows(state);
@@ -317,13 +320,13 @@ void aes::__euclidean_algorithm(byte left, byte right, uint8_t sigbit){
 
 	uint8_t quotient = 0U;
 	uint8_t quotient_sig_bit = __get_most_sig_bit(right);
-	uint8_t diff = sigbit - quotient_sig_bit;
+	auto diff = static_cast<uint8_t>(sigbit - quotient_sig_bit);
 	quotient += 1U << diff;
-	uint8_t remainder = left ^ (right<<diff);
+	uint8_t remainder = left ^ (right<<diff); //NOLINT(hcpp-signed-bitwise)
 	uint8_t temp_bit = __get_most_sig_bit(remainder);
 	while(quotient_sig_bit<= temp_bit){
 		diff = temp_bit-quotient_sig_bit;
-		remainder = remainder ^ (right <<diff);
+		remainder = remainder ^ (right <<diff); //NOLINT(hcpp-signed-bitwise)
 		quotient += 1U <<diff;
 		temp_bit = __get_most_sig_bit(remainder);
 	}
@@ -348,11 +351,11 @@ auto aes:: __extended_euclidean_algorithm(byte left, byte right, uint8_t sigbit)
         uint8_t quotient_sig_bit = __get_most_sig_bit(right);
         uint8_t diff = sigbit - quotient_sig_bit;
         quotient += 1U << diff;
-        uint8_t remainder = left ^ (right<<diff);
+        uint8_t remainder = left ^ (right<<diff); //NOLINT(hcpp-signed-bitwise)
         uint8_t temp_bit = __get_most_sig_bit(remainder);
         while(quotient_sig_bit<= temp_bit){
                 diff = temp_bit-quotient_sig_bit;
-                remainder = remainder ^ (right <<diff);
+                remainder = remainder ^ (right <<diff); //NOLINT(hcpp-signed-bitwise)
                 quotient += 1U <<diff;
                 temp_bit = __get_most_sig_bit(remainder);
         }
@@ -380,14 +383,14 @@ auto aes:: __get_S_BOX_value(byte s)->byte{
 	byte b5 = (inverse & 32U)>>5U;
 	byte b6 = (inverse & 64U)>>6U;
 	byte b7 = (inverse & 128U)>>7U;
-	byte b_prime0 = b0 ^ b4 ^ b5 ^ b6 ^ b7;
-	byte b_prime1 = b0 ^ b1 ^ b5 ^ b6 ^ b7;
-	byte b_prime2 = b0 ^ b1 ^ b2 ^ b6 ^ b7;
-	byte b_prime3 = b0 ^ b1 ^ b2 ^ b3 ^ b7;
-	byte b_prime4 = b0 ^ b1 ^ b2 ^ b3 ^ b4;
-	byte b_prime5 = b1 ^ b2 ^ b3 ^ b4 ^ b5;
-	byte b_prime6 = b2 ^ b3 ^ b4 ^ b5 ^ b6;
-	byte b_prime7 = b3 ^ b4 ^ b5 ^ b6 ^ b7;
+	byte b_prime0 = b0 ^ b4 ^ b5 ^ b6 ^ b7; //NOLINT(hcpp-signed-bitwise)
+	byte b_prime1 = b0 ^ b1 ^ b5 ^ b6 ^ b7; //NOLINT(hcpp-signed-bitwise)
+	byte b_prime2 = b0 ^ b1 ^ b2 ^ b6 ^ b7; //NOLINT(hcpp-signed-bitwise)
+	byte b_prime3 = b0 ^ b1 ^ b2 ^ b3 ^ b7; //NOLINT(hcpp-signed-bitwise)
+	byte b_prime4 = b0 ^ b1 ^ b2 ^ b3 ^ b4; //NOLINT(hcpp-signed-bitwise)
+	byte b_prime5 = b1 ^ b2 ^ b3 ^ b4 ^ b5; //NOLINT(hcpp-signed-bitwise)
+	byte b_prime6 = b2 ^ b3 ^ b4 ^ b5 ^ b6; //NOLINT(hcpp-signed-bitwise)
+	byte b_prime7 = b3 ^ b4 ^ b5 ^ b6 ^ b7; //NOLINT(hcpp-signed-bitwise)
 	byte temp = b_prime0;
 	temp ^= b_prime1 << 1U;
 	temp ^= b_prime2 << 2U;
@@ -410,14 +413,14 @@ auto aes:: __get_inverse_S_BOX_value(byte s)->byte{
         byte b5 = (temp & 32U)>>5U;
         byte b6 = (temp & 64U)>>6U;
         byte b7 = (temp & 128U)>>7U;
-	byte b_prime0 = b2 ^ b5 ^ b7;
-        byte b_prime1 = b0 ^ b3 ^ b6;
-        byte b_prime2 = b1 ^ b4 ^ b7;
-        byte b_prime3 = b0 ^ b2 ^ b5;
-        byte b_prime4 = b1 ^ b3 ^ b6;
-        byte b_prime5 = b2 ^ b4 ^ b7;
-        byte b_prime6 = b0 ^ b3 ^ b5;
-        byte b_prime7 = b1 ^ b4 ^ b6;
+	byte b_prime0 = b2 ^ (b5 ^ b7);
+        byte b_prime1 = (b0 ^ b3) ^ b6;
+        byte b_prime2 = (b1 ^ b4) ^ b7;
+        byte b_prime3 = (b0 ^ b2) ^ b5;
+        byte b_prime4 = (b1 ^ b3) ^ b6;
+        byte b_prime5 = (b2 ^ b4) ^ b7;
+        byte b_prime6 = (b0 ^ b3) ^ b5;
+        byte b_prime7 = (b1 ^ b4) ^ b6;
 	temp = b_prime0;
         temp ^= b_prime1 << 1U;
         temp ^= b_prime2 << 2U;

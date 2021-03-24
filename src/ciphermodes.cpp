@@ -19,13 +19,14 @@ void ciphermodes::unpad_ciphertext(std::vector<aes::byte>& ciphertext_bytes){
         }
 }
 
-auto ciphermodes::merge_blocks(std::vector<std::vector<aes::byte> > ciphertext_blocks) -> std::vector<aes::byte>{
+auto ciphermodes::merge_blocks(const std::vector<std::vector<aes::byte>>& ciphertext_blocks) -> std::vector<aes::byte>{
 	std::vector<aes::byte> ciphertext_bytes;
-    for(int i = 0; i < ciphertext_blocks.size(); i++){
-        for(int j = 0; j < ciphertext_blocks[i].size(); j++){
-            ciphertext_bytes.push_back(ciphertext_blocks[i][j]);
+    for (const auto& cipher_block : ciphertext_blocks) {
+        for (const auto& block_byte : cipher_block) {
+            ciphertext_bytes.push_back(block_byte);
         }
     }
+
     return ciphertext_bytes;
 }
 
@@ -64,33 +65,33 @@ auto ciphermodes::convert_state_to_block(aes::state state) -> std::vector<aes::b
     return block;
 }
 
-auto ciphermodes::ECB_Encrypt(std::vector<aes::byte> plaintext_bytes, std::vector<aes::byte> key_bytes) -> std::vector<aes::byte> {
+auto ciphermodes::ECB_Encrypt(std::vector<aes::byte> plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte> {
     std::array<int, 2> nk_nr = aes::get_Nk_Nr(key_bytes.size()); 
     std::vector<aes::word> expandedKey(aes::NB*(nk_nr[1]+1));
     aes::key_expansion(key_bytes, expandedKey, nk_nr[0], nk_nr[1]);
     pad_plaintext(plaintext_bytes);
     std::vector<std::vector<aes::byte> > plaintext_blocks = ciphermodes::create_blocks(plaintext_bytes);
     
-    for(int i = 0; i < plaintext_blocks.size(); i++){
-        aes::state state = convert_block_to_state(plaintext_blocks[i]);
+    for(auto& plain_block : plaintext_blocks){
+        aes::state state = convert_block_to_state(plain_block);
         aes::encrypt(nk_nr[1], state, expandedKey);
-        plaintext_blocks[i] = convert_state_to_block(state);
+        plain_block = convert_state_to_block(state);
     }
 
     std::vector<aes::byte> ciphertext_bytes = merge_blocks(plaintext_blocks);
     return ciphertext_bytes;
 }
 
-auto ciphermodes::ECB_Decrypt(std::vector<aes::byte> ciphertext_bytes, std::vector<aes::byte> key_bytes) -> std::vector<aes::byte> {
+auto ciphermodes::ECB_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte> {
     std::array<int, 2> nk_nr = aes::get_Nk_Nr(key_bytes.size()); 
     std::vector<aes::word> expandedKey(aes::NB*(nk_nr[1]+1));
     aes::key_expansion(key_bytes, expandedKey, nk_nr[0], nk_nr[1]);
-    std::vector<std::vector<aes::byte> > ciphertext_blocks =  ciphermodes::create_blocks(ciphertext_bytes);
+    std::vector<std::vector<aes::byte> > ciphertext_blocks =  ciphermodes::create_blocks(std::move(ciphertext_bytes));
     
-    for(int i = 0; i < ciphertext_blocks.size(); i++){
-        aes::state state = convert_block_to_state(ciphertext_blocks[i]);
+    for (auto& block : ciphertext_blocks) {
+       aes::state state = convert_block_to_state(block);
         aes::decrypt(nk_nr[1], state, expandedKey);
-        ciphertext_blocks[i] = convert_state_to_block(state);
+        block = convert_state_to_block(state); 
     }
 
     std::vector<aes::byte> plaintext_bytes = merge_blocks(ciphertext_blocks);
