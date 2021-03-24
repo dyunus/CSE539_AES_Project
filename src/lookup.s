@@ -39,7 +39,7 @@ no_cache_lookup:
     movaps xmm13, [rsi + 0xd0]
     movaps xmm14, [rsi + 0xe0]
     movaps xmm15, [rsi + 0xf0]
-    
+
     # Calculate xmm register and offset into register where byte is stored
     xor edx, edx
     mov rax, rdi    
@@ -156,4 +156,3 @@ x15:
     pextrq r8, xmm15, 0
     pextrq r9, xmm15, 1
     jmp join
-    
