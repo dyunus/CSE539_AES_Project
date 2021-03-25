@@ -23,6 +23,13 @@ jmp_table:
 _no_cache_lookup:
 .intel_syntax noprefix    
     # Load entire lookup table into CPU
+    push rbp
+    mov rbp, rsp
+    push rbx
+    push r9
+    push r14
+    push r8
+
     movaps xmm0, [rsi]
     movaps xmm1, [rsi + 0x10]    
     movaps xmm2, [rsi + 0x20]
@@ -91,6 +98,11 @@ zeroize:
     vpxor xmm13, xmm13, xmm13
     vpxor xmm14, xmm14, xmm14
     vpxor xmm15, xmm15, xmm15
+    pop r8
+    pop r14
+    pop r9
+    pop rbx
+    leave
     ret
 x0:
     pextrq r8, xmm0, 0

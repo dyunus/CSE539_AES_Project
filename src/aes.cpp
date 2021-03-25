@@ -130,7 +130,7 @@ void aes::mix_columns(state &state) {
 }
 
 void aes::inv_mix_columns(state &state) {
-  for (int c = 0; c < NB; ++c) {
+  for (std::size_t c = 0; c < NB; ++c) {
     byte s0 = state[0][c];
     byte s1 = state[1][c];
     byte s2 = state[2][c];
@@ -193,10 +193,13 @@ auto aes::rotword(word word) -> aes::word {
 
 auto aes::subword(word word) -> aes::word {
   auto split = splitWord(word);
-  byte b1 = S_BOX.at((split[0] & 0xF0U) + (split[0] & 0xFU));
-  byte b2 = S_BOX.at((split[1] & 0xF0U) + (split[1] & 0xFU));
-  byte b3 = S_BOX.at((split[2] & 0xF0U) + (split[2] & 0xFU));
-  byte b4 = S_BOX.at((split[3] & 0xF0U) + (split[3] & 0xFU));
+  auto *sbox_ptr = S_BOX.data();
+
+  byte b1 = no_cache_lookup((split[0] & 0xF0U) + (split[0] & 0xFU), sbox_ptr);
+  byte b2 = no_cache_lookup((split[1] & 0xF0U) + (split[1] & 0xFU), sbox_ptr);
+  byte b3 = no_cache_lookup((split[2] & 0xF0U) + (split[2] & 0xFU), sbox_ptr);
+  byte b4 = no_cache_lookup((split[3] & 0xF0U) + (split[3] & 0xFU), sbox_ptr);
+
   return buildWord(b1, b2, b3, b4);
 }
 
@@ -291,7 +294,7 @@ void aes::decrypt(int Nr, state &state, const std::vector<word> &w) {
   inv_shift_rows(state);
   inv_sub_bytes(state);
   for (std::size_t i = 1; i < Nr; i++) {
-    roundKey = __spliceKey(Nr - i, w);
+    roundKey = __spliceKey(static_cast<int>(Nr - i), w);
     add_round_key(state, roundKey);
     inv_mix_columns(state);
     inv_shift_rows(state);
