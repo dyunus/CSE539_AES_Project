@@ -1,1 +1,1 @@
-cmake -DCMAKE_C_COMPILER=$(which gcc) -DCMAKE_CXX_COMPILER=$(which g++) -DCMAKE_ASM_COMPILER=$(which gcc) ../ && make
+cmake -DCMAKE_C_COMPILER=$(which clang) -DCMAKE_CXX_COMPILER=$(which clang++) -DCMAKE_ASM_COMPILER=$(which clang++) ../ && make

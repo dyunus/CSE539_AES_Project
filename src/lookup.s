@@ -23,8 +23,8 @@ jmp_table:
 no_cache_lookup:
 .intel_syntax noprefix    
     # Load entire lookup table into CPU
-    movaps xmm1, [rsi + 0x10]
     movaps xmm0, [rsi]
+    movaps xmm1, [rsi + 0x10]    
     movaps xmm2, [rsi + 0x20]
     movaps xmm3, [rsi + 0x30]
     movaps xmm4, [rsi + 0x40]

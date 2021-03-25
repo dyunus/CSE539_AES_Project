@@ -3,7 +3,7 @@
 
 void ciphermodes::pad_plaintext(std::vector<aes::byte>& plaintext_bytes){
 		aes::byte padNum = 16 - (plaintext_bytes.size() % 16);
-        for(int i = 0; i < padNum; i++){
+        for(std::size_t i = 0; i < padNum; i++){
             plaintext_bytes.push_back(padNum);
         }
 }
@@ -33,7 +33,7 @@ auto ciphermodes::merge_blocks(const std::vector<std::vector<aes::byte>>& cipher
 auto ciphermodes::create_blocks(std::vector<aes::byte> plaintext_bytes) -> std::vector<std::vector<aes::byte> >{
 	std::vector<std::vector<aes::byte> > plaintext_blocks;
     std::vector<aes::byte> new_block;
-    for(int i = 0; i < plaintext_bytes.size(); i++){
+    for(std::size_t i = 0; i < plaintext_bytes.size(); i++){
         if(i != 0 && i % 16 == 0){
             plaintext_blocks.push_back(new_block);
             new_block.clear();
@@ -47,8 +47,8 @@ auto ciphermodes::create_blocks(std::vector<aes::byte> plaintext_bytes) -> std::
 auto ciphermodes::convert_block_to_state(std::vector<aes::byte> block) -> aes::state{
     int index = 0;
     aes::state state;
-    for(int j = 0; j < aes::NB; j++) {
-        for(int i = 0; i < aes::NB; i++){
+    for(std::size_t j = 0; j < aes::NB; j++) {
+        for(std::size_t i = 0; i < aes::NB; i++){
             state[i][j] = block[index++];
         }
     }
@@ -57,8 +57,8 @@ auto ciphermodes::convert_block_to_state(std::vector<aes::byte> block) -> aes::s
 
 auto ciphermodes::convert_state_to_block(aes::state state) -> std::vector<aes::byte>{
     std::vector<aes::byte> block;
-    for(int j = 0; j < aes::NB; j++) {
-        for(int i = 0; i < aes::NB; i++){
+    for(std::size_t j = 0; j < aes::NB; j++) {
+        for(std::size_t i = 0; i < aes::NB; i++){
             block.push_back(state[i][j]);
         }
     }

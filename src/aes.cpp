@@ -264,7 +264,7 @@ void aes::encrypt(int Nr, state &state, const std::vector<word> &w) {
   aes::state roundKey = __spliceKey(0, w);
   add_round_key(state, roundKey);
   //__debug_print_state(state);
-  for (int i = 1; i < Nr; i++) {
+  for (std::size_t i = 1; i < Nr; i++) {
     // printf("Round number %d\n",i);
     sub_bytes(state);
     //__debug_print_state(state);
@@ -289,7 +289,7 @@ void aes::decrypt(int Nr, state &state, const std::vector<word> &w) {
   add_round_key(state, roundKey);
   inv_shift_rows(state);
   inv_sub_bytes(state);
-  for (int i = 1; i < Nr; i++) {
+  for (std::size_t i = 1; i < Nr; i++) {
     roundKey = __spliceKey(Nr - i, w);
     add_round_key(state, roundKey);
     inv_mix_columns(state);

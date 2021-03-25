@@ -94,7 +94,7 @@ auto main(int argc, const char *argv[]) -> int
     // aes::__debug_print_state(state);
 
     std::cout << "Original Plaintext:\n";
-    for(int i = 0; i< plaintext_bytes.size(); i++){
+    for(std::size_t i = 0; i< plaintext_bytes.size(); i++){
          if(i % 16 == 0){
             printf("\n");     
         }
@@ -106,7 +106,7 @@ auto main(int argc, const char *argv[]) -> int
     std::vector<aes::byte> ciphertext_bytes = ciphermodes::ECB_Encrypt(plaintext_bytes, key_bytes);
     
     std::cout << "\nECB Ciphertext:\n";
-    for(int i = 0; i< ciphertext_bytes.size(); i++){
+    for(std::size_t i = 0; i< ciphertext_bytes.size(); i++){
          if(i % 16 == 0){
             printf("\n");     
         }
@@ -116,7 +116,7 @@ auto main(int argc, const char *argv[]) -> int
     std::vector<aes::byte> decrypted_bytes = ciphermodes::ECB_Decrypt(ciphertext_bytes, key_bytes);
     
     std::cout << "\n\nECB Decrypted:\n";
-    for(int i = 0; i< decrypted_bytes.size(); i++){
+    for(std::size_t i = 0; i< decrypted_bytes.size(); i++){
         if(i % 16 == 0){
             printf("\n");     
         }
@@ -185,7 +185,7 @@ auto main(int argc, const char *argv[]) -> int
     aes::__debug_print_state(state4);
 
     aes::byte b = 0U;
-    for (int i = 0; i < 256; i++)
+    for (std::size_t i = 0; i < 256; i++)
     {
         aes::byte sbox = aes::__get_S_BOX_value(b);
         printf("0x%02x  ", sbox);
@@ -196,7 +196,7 @@ auto main(int argc, const char *argv[]) -> int
     }
     printf("\n\n");
     b = 0U;
-    for (int i = 0; i < 256; i++)
+    for (std::size_t i = 0; i < 256; i++)
     {
         aes::byte sbox = aes::__get_inverse_S_BOX_value(b);
         printf("0x%02x  ", sbox);
@@ -207,7 +207,7 @@ auto main(int argc, const char *argv[]) -> int
     }
 
     // Accuracy and timing check
-    for (int i = 0; i < 256; ++i) {
+    for (std::size_t i = 0; i < 256; ++i) {
         auto cache_start = std::chrono::steady_clock::now();
         aes::byte val = aes::S_BOX.at(i);
         auto cache_end = std::chrono::steady_clock::now();
