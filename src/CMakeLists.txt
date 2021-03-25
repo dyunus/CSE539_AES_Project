@@ -4,7 +4,7 @@ endif(APPLE)
 
 if (UNIX AND NOT APPLE)
     set(OS-AGNOSTIC-LOOKUP lookup.s)
-endif (NOT APPLE)
+endif (UNIX AND NOT APPLE)
 
 set(SOURCES
     ${SOURCES}

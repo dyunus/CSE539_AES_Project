@@ -40,7 +40,7 @@ auto __rdseed_rand() -> std::array<aes::byte, RAND_LEN / 8> {
 
     for (int r = 0; r < keygen_rounds; ++r) {     
         unsigned long long key_portion{}; // NOLINT   Intel intrinsics require ULL, not uint64_t 
-        assert(_rdseed64_step(&key_portion)); // Returns 0 on failure (sometimes it's too fast)
+        assert(_rdseed64_step(&key_portion)); // NOLINT Returns 0 on failure (sometimes it's too fast)
 
         // Extract 8 bits from 64-bit random key-chunk
         auto* byte_ptr = reinterpret_cast<aes::byte*>(&key_portion);
@@ -138,7 +138,7 @@ auto randgen() -> std::array<aes::byte, RAND_LEN / 8> {
     // If RDSEED is supported on an AMD or Intel processor, EBX bit 18 will be set.
     key_bytes = ((cpu_info[1] & RDSEED_FLAG) != 0) ? __rdseed_rand<RAND_LEN>() : __os_randgen<RAND_LEN>();
 
-    assert(key_bytes.size() == RAND_LEN / sizeof(uint64_t));
+    assert(key_bytes.size() == RAND_LEN / sizeof(uint64_t)); // NOLINT
     return key_bytes;
 }
 
