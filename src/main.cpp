@@ -69,6 +69,11 @@ auto main(int argc, const char *argv[]) -> int
         exit(1);
     }
 
+    auto rand_arr = randgen<64>();
+    for (const auto& elem : rand_arr) {
+        printf("Random element: %d\n", elem);
+    }
+
     // create a vector to store expanded key
     std::vector<aes::word> expandedKey(aes::NB * (Nr + 1));
 

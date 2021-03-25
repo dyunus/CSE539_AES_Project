@@ -74,6 +74,7 @@ auto aes::__field_multiply_by_2(byte s) -> aes::byte {
   byte sig_bit = s >> 7U;
   if (sig_bit == 0x00) {
     result = s << 1U;
+    result ^= 0x00U;
   } else {
     byte shifted = s << 1U;
     result = shifted ^ 0x1BU;
