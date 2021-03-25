@@ -1,6 +1,14 @@
+if (APPLE)
+    set(OS-AGNOSTIC-LOOKUP mac_lookup.s)
+endif(APPLE)
+
+if (UNIX AND NOT APPLE)
+    set(OS-AGNOSTIC-LOOKUP lookup.s)
+endif (NOT APPLE)
+
 set(SOURCES
     ${SOURCES}
-    lookup.s
+    ${OS-AGNOSTIC-LOOKUP}
     main.cpp
     ciphermodes.cpp
     aes.cpp    
