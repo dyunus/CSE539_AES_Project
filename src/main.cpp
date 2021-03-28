@@ -129,6 +129,31 @@ auto main(int argc, const char *argv[]) -> int
     }
     std::cout << "\n";
 
+
+    std::cout << "\n\nCTR Mode\n";
+
+    ciphertext_bytes = ciphermodes::CTR_Encrypt(plaintext_bytes, key_bytes);
+
+    std::cout << "\nCTR Ciphertext:\n";
+    for(std::size_t i = 0; i< ciphertext_bytes.size(); i++){
+         if(i % 16 == 0){
+            printf("\n");
+        }
+        printf("0x%02x ", ciphertext_bytes[i]);
+    }
+
+    decrypted_bytes = ciphermodes::CTR_Decrypt(ciphertext_bytes, key_bytes);
+
+    std::cout << "\n\nCTR Decrypted:\n";
+    for(std::size_t i = 0; i< decrypted_bytes.size(); i++){
+        if(i % 16 == 0){
+            printf("\n");
+        }
+        printf("0x%02x ", decrypted_bytes[i]);
+    }
+    std::cout << "\n";
+
+
     aes::state state = {{{0x19, 0xa0, 0x9a, 0xe9},
                          {0x3d, 0xf4, 0xc6, 0xf8},
                          {0xe3, 0xe2, 0x8d, 0x48},

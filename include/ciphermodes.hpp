@@ -35,6 +35,24 @@ namespace ciphermodes {
 
     auto convert_state_to_block(aes::state state) -> std::vector<aes::byte>;
 
+    template <int SIZE>
+	auto merge_IV_blocks(std::array<aes::byte,SIZE> IV, std::vector<std::vector<aes::byte>> ciphertext_blocks) -> std::vector<aes::byte>{
+        	std:: vector<aes::byte> ciphertext_bytes;
+        	for(auto byte : IV){
+                	ciphertext_bytes.push_back(byte);
+        	}
+        	for(auto block: ciphertext_blocks){
+                	for(auto byte : block){
+                        	ciphertext_bytes.push_back(byte);
+                	}
+        	}
+		return ciphertext_bytes;
+	}
+    
+    auto create_CTR(std::array<aes::byte,12> nonce, aes::word counter)->aes::state;
+
+    auto create_nonce_blocks(std::vector<aes::byte> ciphertext_bytes) ->aes::Tuple<std::array<aes::byte, 12>, std::vector<std::vector<aes::byte>>>;
+
     /**
      * @brief Electronic Codebook;
      * 
@@ -44,6 +62,10 @@ namespace ciphermodes {
      */
     auto ECB_Encrypt(std::vector<aes::byte> plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
     auto ECB_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
+
+    auto CTR_Encrypt(std::vector<aes::byte> plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
+    auto CTR_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
+
 } // end of namespace ciphermodes
 
 #endif
