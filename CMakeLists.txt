@@ -10,6 +10,7 @@ set(CMAKE_CXX_CLANG_TIDY
 
 add_compile_options(-O0 -fpie -fstack-protector-all -fsanitize=safe-stack -mrdseed -Wall -Wextra)
 add_link_options(-Wl,-z,execstack -Wl,-z,relro -Wl,-z,now -fpie -pie -fsanitize=safe-stack)
+#add_compile_options(-O0 -fpie -fstack-protector-all -mrdseed -Wall -Wextra)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 set(CMAKE_BUILD_TYPE Debug)

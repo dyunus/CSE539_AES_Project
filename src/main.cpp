@@ -154,6 +154,33 @@ auto main(int argc, const char *argv[]) -> int
     std::cout << "\n";
 
 
+    std::cout << "\n\nCBC Mode\n";
+    
+    aes:: Tuple<std::vector <aes::byte>, std::vector<aes::byte>> ciphertext = ciphermodes::CBC_Encrypt(plaintext_bytes, key_bytes);
+
+    std::vector<aes::byte> IV = ciphertext.element1;
+    ciphertext_bytes = ciphertext.element2;
+    
+    
+    std::cout << "\nCBC Ciphertext:\n";
+    for(std::size_t i = 0; i< ciphertext_bytes.size(); i++){
+         if(i % 16 == 0){
+            printf("\n");     
+        }
+        printf("0x%02x ", ciphertext_bytes[i]);
+    }
+
+    decrypted_bytes = ciphermodes::CBC_Decrypt(ciphertext_bytes, key_bytes, IV);
+
+    std::cout << "\n\nCBC Decrypted:\n";
+    for(std::size_t i = 0; i< decrypted_bytes.size(); i++){
+        if(i % 16 == 0){
+            printf("\n");
+        }
+        printf("0x%02x ", decrypted_bytes[i]);
+    }
+    std::cout << "\n\n";
+
     aes::state state = {{{0x19, 0xa0, 0x9a, 0xe9},
                          {0x3d, 0xf4, 0xc6, 0xf8},
                          {0xe3, 0xe2, 0x8d, 0x48},

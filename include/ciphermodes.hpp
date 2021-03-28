@@ -18,6 +18,8 @@ namespace ciphermodes {
 
     void unpad_ciphertext(std::vector<aes::byte>& ciphertext_bytes);
 
+    std::vector<aes::byte> xor_blocks(std::vector<aes::byte> block1,std::vector<aes::byte> block2);
+
     /**
      * @brief Populate vector of blocks;
      * A new block is created every 128 bytes, it is possible that the final block is not a complete 128 bytes since
@@ -66,6 +68,8 @@ namespace ciphermodes {
     auto CTR_Encrypt(std::vector<aes::byte> plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
     auto CTR_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
 
+    auto CBC_Encrypt(std::vector<aes::byte> plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> aes:: Tuple<std::vector <aes::byte>, std::vector<aes::byte>>;
+    auto CBC_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std::vector<aes::byte>& key_bytes,std::vector<aes::byte> IV) -> std::vector<aes::byte>;
 } // end of namespace ciphermodes
 
 #endif
