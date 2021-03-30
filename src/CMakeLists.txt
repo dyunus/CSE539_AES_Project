@@ -13,6 +13,7 @@ set(SOURCES
     ciphermodes.cpp
     aes.cpp    
     yandom.cpp
+    testbench.cpp
 )
 
 include_directories(${PROJECT_SOURCE_DIR}/include)

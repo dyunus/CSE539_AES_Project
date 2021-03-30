@@ -3,8 +3,8 @@
 #include <fstream> // File I/O
 #include <iostream>
 #include <string>
+#include "testbench.hpp"
 #include <vector>
-#include <chrono>
 #include "yandom.hpp"
 
 auto read_binary_file(const char *file_name, std::vector<aes::byte> &vec)
@@ -68,11 +68,7 @@ auto main(int argc, const char *argv[]) -> int
         std::cerr << "Invalid Key Length for AES!\n";
         exit(1);
     }
-
-    auto rand_arr = randgen<64>();
-    for (const auto& elem : rand_arr) {
-        printf("Random element: %d\n", elem);
-    }
+            
 
     // create a vector to store expanded key
     std::vector<aes::word> expandedKey(aes::NB * (Nr + 1));
@@ -97,6 +93,8 @@ auto main(int argc, const char *argv[]) -> int
     // aes::__debug_print_state(state);
     // aes::decrypt(Nr, state, expandedKey);
     // aes::__debug_print_state(state);
+
+    test_modules(tb::TEST_NO_CACHE);
 
     std::cout << "Original Plaintext:\n";
     for(std::size_t i = 0; i< plaintext_bytes.size(); i++){
@@ -209,30 +207,5 @@ auto main(int argc, const char *argv[]) -> int
             printf("\n");
         }
         b += 1U;
-    }
-
-    // Accuracy and timing check
-    for (std::size_t i = 0; i < 256; ++i) {
-        auto cache_start = std::chrono::steady_clock::now();
-        aes::byte val = aes::S_BOX.at(i);
-        auto cache_end = std::chrono::steady_clock::now();
-        auto ncache_start = std::chrono::steady_clock::now();
-        aes::byte val_other = no_cache_lookup(i, aes::S_BOX.data());
-        auto ncache_end = std::chrono::steady_clock::now();
-
-
-        if (val != val_other) {
-            std::cerr << "Val " << static_cast<int>(val) << " does not equal val_other " << static_cast<int>(val_other) 
-            << "for index " << i << "\n";
-            exit(1);
-        } else {
-            std::cout << static_cast<int>(val) << " (" 
-                    << std::chrono::duration_cast<std::chrono::nanoseconds>(cache_end - cache_start).count()
-                    << "ns)" 
-                    << " == " << static_cast<int>(val_other) << " ("
-                    << std::chrono::duration_cast<std::chrono::nanoseconds>(ncache_end - ncache_start).count()
-                    << "ns)"
-                    << std::endl;
-        }
-    }
+    }   
 }

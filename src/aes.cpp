@@ -4,7 +4,7 @@ void aes::__swap_bytes(state &state, const std::array<byte, 256> &sub_source) {
   for (std::size_t r = 0; r < NB; ++r) {
     for (std::size_t c = 0; c < NB; ++c) {
       byte curr_byte = state[r][c];
-      state[r][c] = no_cache_lookup((curr_byte & 0xF0U) + (curr_byte & 0xFU),
+      state[r][c] = no_cache_lookup(curr_byte & 0xF0U, curr_byte & 0xFU,
                                     sub_source.data());
       // sub_source.at((curr_byte & 0xF0U) + (curr_byte & 0xFU));
     }
@@ -183,7 +183,9 @@ auto aes::splitWord(word word) -> std::array<byte, 4> {
 }
 
 auto aes::buildWord(byte b1, byte b2, byte b3, byte b4) -> aes::word {
-  return (b1 << 24U) | (b2 << 16U) | (b3 << 8U) | (b4); // NOLINT(hicpp-signed-bitwise) : This is using proper unsigned conventions, but is too complicated for the linter
+  return (b1 << 24U) | (b2 << 16U) | (b3 << 8U) |
+         (b4); // NOLINT(hicpp-signed-bitwise) : This is using proper unsigned
+               // conventions, but is too complicated for the linter
 }
 
 auto aes::rotword(word word) -> aes::word {
@@ -195,10 +197,10 @@ auto aes::subword(word word) -> aes::word {
   auto split = splitWord(word);
   auto *sbox_ptr = S_BOX.data();
 
-  byte b1 = no_cache_lookup((split[0] & 0xF0U) + (split[0] & 0xFU), sbox_ptr);
-  byte b2 = no_cache_lookup((split[1] & 0xF0U) + (split[1] & 0xFU), sbox_ptr);
-  byte b3 = no_cache_lookup((split[2] & 0xF0U) + (split[2] & 0xFU), sbox_ptr);
-  byte b4 = no_cache_lookup((split[3] & 0xF0U) + (split[3] & 0xFU), sbox_ptr);
+  byte b1 = no_cache_lookup(split[0] & 0xF0U, split[0] & 0xFU, sbox_ptr);
+  byte b2 = no_cache_lookup(split[1] & 0xF0U, split[1] & 0xFU, sbox_ptr);
+  byte b3 = no_cache_lookup(split[2] & 0xF0U, split[2] & 0xFU, sbox_ptr);
+  byte b4 = no_cache_lookup(split[3] & 0xF0U, split[3] & 0xFU, sbox_ptr);
 
   return buildWord(b1, b2, b3, b4);
 }

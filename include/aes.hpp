@@ -19,8 +19,7 @@
  * Given an index, loads the entire lookup table into registers, selects the requested byte, and clears state
  * Discussed in Efficient Cache Attacks on AES, and Countermeasures by Eran Tromer, Dag Arne Osvik, and Adi Shamir
  */
-extern "C" uint8_t no_cache_lookup(uint8_t index, const uint8_t* lookup_table); //  NOLINT(modernize-use-trailing-return-type)  Come on linter, this is C...
-extern "C" void __load_lookup_table(const uint8_t* lookup_table);
+extern "C" uint8_t no_cache_lookup(uint8_t row, uint8_t col, const uint8_t* lookup_table); //  NOLINT(modernize-use-trailing-return-type)  Come on linter, this is C...
 
 // namespace aes
 namespace aes
