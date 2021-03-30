@@ -33,6 +33,13 @@ namespace aes
 
     constexpr const std::array<word, 11> Rcon = {0x00000000, 0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000, 0x80000000, 0x1b000000, 0x36000000};
 
+
+    template<class TYPE1, class TYPE2>
+	    struct Tuple{
+		    TYPE1 element1;
+		    TYPE2 element2;
+	    };
+
     // Templated type aliases for data structure abstraction
     template <class T, std::size_t DIM_X, std::size_t DIM_Y>
     using matrix = std::array<std::array<T, DIM_X>, DIM_Y>;
