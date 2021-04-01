@@ -17,10 +17,30 @@ namespace tb {
     };
 
     /**
+     * @brief Helper function to print the contents of a vector
+     * @param vec: Vector to print
+     */
+    template<typename T>
+    void __print_vector(std::vector<T> vec) {
+        for (std::size_t i = 0; i < vec.size(); ++i) {
+            if (i % 16 == 0){
+                printf("\n");     
+            }
+        }
+        std::cout << std::endl;
+    }
+
+    /**
      * @brief Used to test the average runtime of no_cache_lookup as a means of ensuring constant time execution
     * 
     */
     void __test_no_cache_lookup_timing();
+
+    /**
+     * @brief Used to test the encryption, decryption process of OFM to ensure equality
+     * 
+     */
+    void test_ofm_mode_accuracy(std::vector<aes::byte>& plaintext_bytes, const std::vector<aes::byte>& key_bytes);
 
     /**
      * @brief Function to call to test specific modules within the program

@@ -7,7 +7,6 @@
 
 #include "aes.hpp"
 
-// namespace aes
 namespace ciphermodes {
      /**
      * @brief Pads plaintext according to PKCS #7 [Add hex representation of b repeated b times]
@@ -18,7 +17,7 @@ namespace ciphermodes {
 
     void unpad_ciphertext(std::vector<aes::byte>& ciphertext_bytes);
 
-    std::vector<aes::byte> xor_blocks(std::vector<aes::byte> block1,std::vector<aes::byte> block2);
+    auto xor_blocks(std::vector<aes::byte> block1,std::vector<aes::byte> block2) -> std::vector<aes::byte>;
 
     /**
      * @brief Populate vector of blocks;
@@ -34,6 +33,18 @@ namespace ciphermodes {
     auto merge_blocks(const std::vector<std::vector<aes::byte>>& ciphertext_blocks) -> std::vector<aes::byte>;
 
     auto convert_block_to_state(std::vector<aes::byte> block) -> aes::state;
+
+    template <std::size_t BIT_SIZE>
+    auto convert_block_to_state(const std::array<aes::byte, BIT_SIZE / 8>& block) -> aes::state {
+        int index = 0;
+        aes::state state{};
+        for(std::size_t j = 0; j < aes::NB; j++) {
+            for(std::size_t i = 0; i < aes::NB; i++){
+                state[i][j] = block[index++];
+            }
+        }
+        return state;
+    }
 
     auto convert_state_to_block(aes::state state) -> std::vector<aes::byte>;
 
@@ -73,6 +84,11 @@ namespace ciphermodes {
 
     auto CFB_Encrypt(std::vector<aes::byte> plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
     auto CFB_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
+
+
+    auto OFM_Encrypt(const std::vector<aes::byte>& plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> aes::CipherTuple;
+    auto OFM_Decrypt(const std::vector<aes::byte>& ciphertext_bytes, const std::vector<aes::byte>& key_bytes, const std::vector<aes::byte>& IV) -> std::vector<aes::byte>;
+
 } // end of namespace ciphermodes
 
 #endif

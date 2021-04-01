@@ -273,3 +273,106 @@ auto ciphermodes::CFB_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std
     return plaintext_bytes;
 }
 
+
+auto ciphermodes::OFM_Encrypt(const std::vector<aes::byte>& plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> aes::CipherTuple {
+    using block_vector = std::vector<std::vector<aes::byte>>; // Shorthand notation
+
+    const auto NK_NR = aes::get_Nk_Nr(key_bytes.size());
+    const int NK = NK_NR[0];
+    const int NR = NK_NR[1];
+
+    // Key expansion
+    std::vector<aes::word> expanded_key(aes::NB * (NR + 1));
+    aes::key_expansion(key_bytes, expanded_key, NK, NR);
+
+    block_vector plaintext_blocks = create_blocks(plaintext_bytes);
+
+    block_vector ciphertext_blocks{};
+
+    auto IV = randgen<128>(); // Random nonce used in first iteration of OFM
+
+    
+    // Prepare ciphertext_blocks[0] as encrypted IV XOR m[0]
+    auto IV_state = convert_block_to_state<128>(IV);
+    aes::encrypt(NR, IV_state, expanded_key);
+    ciphertext_blocks.emplace_back(
+        xor_blocks(
+            plaintext_blocks[0],
+            convert_state_to_block(IV_state)            
+        )
+    );
+
+    // Iterate from 1...N blocks
+    for (std::size_t i = 1; i < plaintext_blocks.size(); ++i) {
+
+        // Encrypt the result of XORing the previous cipher and plaintext blocks
+        aes::state prev_xor_state = convert_block_to_state(
+            xor_blocks(
+                ciphertext_blocks[i - 1],
+                plaintext_blocks[i - 1]
+            )
+        ); 
+        aes::encrypt(NR, prev_xor_state, expanded_key);
+
+        // New cipher is the XOR of current plaintext block and prev_xor_state
+        ciphertext_blocks.emplace_back(
+            xor_blocks(
+                plaintext_blocks[i],
+                convert_state_to_block(prev_xor_state)
+            )    
+        );
+    }
+
+    return aes::CipherTuple(std::vector<aes::byte>(IV.begin(), IV.end()), merge_blocks(ciphertext_blocks));
+}
+
+auto ciphermodes::OFM_Decrypt(const std::vector<aes::byte>& ciphertext_bytes, const std::vector<aes::byte>& key_bytes, const std::vector<aes::byte>& IV) -> std::vector<aes::byte> {
+    using block_vector = std::vector<std::vector<aes::byte>>; // Shorthand notation
+
+    const auto NK_NR = aes::get_Nk_Nr(key_bytes.size());
+    const int NK = NK_NR[0];
+    const int NR = NK_NR[1];
+
+    // Key expansion
+    std::vector<aes::word> expanded_key(aes::NB * (NR + 1));
+    aes::key_expansion(key_bytes, expanded_key, NK, NR);
+    
+    block_vector ciphertext_blocks = create_blocks(ciphertext_bytes);
+    block_vector plaintext_blocks{};
+
+    // Prepare message_blocks[0] as XOR of cipher[0] and encrypted IV
+    auto IV_state = convert_block_to_state(IV);
+    aes::encrypt(NR, IV_state, expanded_key);
+
+    plaintext_blocks.emplace_back(
+        xor_blocks(
+            ciphertext_blocks[0],
+            convert_state_to_block(IV_state)
+        )
+    );
+
+    std::cout << ciphertext_blocks.size() << std::endl;
+    std::cout << plaintext_blocks.size() << std::endl;
+    // Iterate from 1...N blocks
+    for (std::size_t i = 1; i < ciphertext_blocks.size(); ++i) {
+
+        // Encrypt the result of XORing the previous cipher and plaintext blocks
+        aes::state prev_xor_state = convert_block_to_state(
+            xor_blocks(
+                ciphertext_blocks[i - 1],
+                plaintext_blocks[i - 1]
+            )
+        ); 
+        aes::encrypt(NR, prev_xor_state, expanded_key);
+
+        // New plaintext block is the XOR of current cipher block and prev_xor_state
+        plaintext_blocks.emplace_back(
+            xor_blocks(
+                ciphertext_blocks[i],
+                convert_state_to_block(prev_xor_state)
+            )    
+        );
+    }
+
+    return merge_blocks(plaintext_blocks);
+}

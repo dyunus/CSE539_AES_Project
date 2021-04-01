@@ -1,8 +1,11 @@
 #include "testbench.hpp"
 
+
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <random>
+#include "ciphermodes.hpp"
 
 void tb::test_modules(unsigned long test_flags) {
     if (test_flags | TEST_NO_CACHE) {
@@ -10,7 +13,7 @@ void tb::test_modules(unsigned long test_flags) {
     }
 }
 void tb::__test_no_cache_lookup_timing() {
-    const unsigned int RUN_COUNT = 100000;
+    const unsigned int RUN_COUNT = 10000;
 
     // Set up vectors to track runtime information
     std::vector<double> avg_runtimes(256, 0.0);
@@ -46,4 +49,26 @@ void tb::__test_no_cache_lookup_timing() {
         std::cout << static_cast<std::size_t>(i) << ": " << static_cast<int>(avg_runtimes[i]) << "\n";
     }
     std::cout <<"==========END NO CACHE TEST==========\n";
+}
+
+void tb::test_ofm_mode_accuracy(std::vector<aes::byte>& plaintext_bytes, const std::vector<aes::byte>& key_bytes) {
+    std::cout <<"==========OFM TEST==========\n";
+
+    std::cout << "Plaintext\n";
+    __print_vector<aes::byte>(plaintext_bytes);
+    
+    aes::CipherTuple cipher_tuple = ciphermodes::OFM_Encrypt(plaintext_bytes, key_bytes);
+    std::cout << "OFM Ciphertext\n";
+    __print_vector<aes::byte>(cipher_tuple.element2);
+
+    auto decrypted_plaintext_bytes = ciphermodes::OFM_Decrypt(cipher_tuple.element2, key_bytes, cipher_tuple.element1);
+    std::cout << "OFM Decrypted\n";
+    __print_vector<aes::byte>(decrypted_plaintext_bytes);
+
+
+    for (int i = 0; i < decrypted_plaintext_bytes.size(); ++i) {
+        assert(plaintext_bytes[i] == decrypted_plaintext_bytes[i] && "Decryption does not match!");
+    }
+
+    std::cout <<"==========END OFM TEST==========\n";
 }

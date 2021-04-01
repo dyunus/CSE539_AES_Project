@@ -36,9 +36,17 @@ namespace aes
 
     template<class TYPE1, class TYPE2>
 	    struct Tuple{
+            Tuple() = default;
+            Tuple(TYPE1 element1, TYPE2 element2) {
+                this->element1 = element1;
+                this->element2 = element2;
+            }
+
 		    TYPE1 element1;
 		    TYPE2 element2;
 	    };
+
+    using CipherTuple = Tuple<std::vector<aes::byte>, std::vector<aes::byte>>;
 
     // Templated type aliases for data structure abstraction
     template <class T, std::size_t DIM_X, std::size_t DIM_Y>
