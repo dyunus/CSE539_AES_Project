@@ -19,7 +19,8 @@ namespace ciphermodes {
 
     auto xor_blocks(std::vector<aes::byte> block1,std::vector<aes::byte> block2) -> std::vector<aes::byte>;
     
-    void print_blocks(std::vector<T> vec);
+    
+    void print_blocks(std::vector<aes::byte> vec);
     /**
      * @brief Populate vector of blocks;
      * A new block is created every 128 bytes, it is possible that the final block is not a complete 128 bytes since

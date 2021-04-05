@@ -1,7 +1,7 @@
 #include "ciphermodes.hpp"
 #include "yandom.hpp"
 
-void ciphermodes::print_blocks(std::vector<T> vec){
+void ciphermodes::print_blocks(std::vector<aes::byte> vec){
     for (std::size_t i = 0; i < vec.size(); ++i) {
         if (i % 16 == 0){
             printf("\n");     

@@ -24,10 +24,10 @@ auto read_binary_file(const char *file_name, std::vector<aes::byte> &vec){
 
 auto main(int argc, const char *argv[]) -> int{
     // Sanity checks for file input
-    if (argc != 3){
-        std::cerr << "Must provide a file-input and keyfile!\n";
-        exit(1);
-    }
+    // if (argc != 3){
+    //     std::cerr << "Must provide a file-input and keyfile!\n";
+    //     exit(1);
+    // }
 
     std::vector<aes::byte> input_bytes;
     std::vector<aes::byte> key_bytes;
@@ -44,7 +44,7 @@ auto main(int argc, const char *argv[]) -> int{
         OFM = 4,
         DEBUG = 5,
     };
-    bool mode = -1; 
+    int mode = -1; 
 
 
 
@@ -118,8 +118,13 @@ auto main(int argc, const char *argv[]) -> int{
     
     if(mode == CBC){
         if(encrypt){
-            std::vector<aes::byte> ciphertext = ciphermodes::CBC_Encrypt(input_bytes, key_bytes);
-            ciphermodes::print_blocks(ciphertext);
+            aes:: Tuple<std::vector <aes::byte>, std::vector<aes::byte>> ciphertext = ciphermodes::CBC_Encrypt(input_bytes, key_bytes);
+            std::vector <aes::byte> initialization_vector = ciphertext.element1;
+            std::vector <aes::byte> encrypted_message = ciphertext.element2;
+            std::cout << "\nInitialization Vector:\n";
+            ciphermodes::print_blocks(ciphertext.element1);
+            std::cout << "\nEncrypted Message:\n";
+            ciphermodes::print_blocks(ciphertext.element2);
         }
         else if(decrypt){
             std::vector<aes::byte> plaintext = ciphermodes::CBC_Decrypt(input_bytes, key_bytes, IV_Bytes); //NEEDS IV
@@ -151,8 +156,8 @@ auto main(int argc, const char *argv[]) -> int{
 
     if(mode == OFM){
         if(encrypt){
-            std::vector<aes::byte> ciphertext = ciphermodes::OFM_Encrypt(input_bytes,key_bytes);
-            ciphermodes::print_blocks(ciphertext);
+            aes::Tuple<std::vector <aes::byte>, std::vector<aes::byte>> ciphertext = ciphermodes::OFM_Encrypt(input_bytes,key_bytes);
+            ciphermodes::print_blocks(ciphertext.element2);
         }
         else if(decrypt){
             std::vector<aes::byte> plaintext = ciphermodes::OFM_Decrypt(input_bytes,key_bytes, IV_Bytes);
