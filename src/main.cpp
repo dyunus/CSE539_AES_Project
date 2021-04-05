@@ -22,6 +22,18 @@ auto read_binary_file(const char *file_name, std::vector<aes::byte> &vec){
     }
 }
 
+auto write_binary_file(const char *file_name, std::vector<aes::byte> &vec){
+    std::ofstream file(file_name, std::ios::out | std::ios::binary);
+
+    if (!file.is_open()){
+        // Was not able to open this file
+        std::cerr << "Unable to open " << file_name << "!\n";
+        exit(1);
+    }
+    for (const auto &e : vec) file << e;
+}
+
+
 auto main(int argc, const char *argv[]) -> int{
     // Sanity checks for file input
     // if (argc != 3){
@@ -32,6 +44,8 @@ auto main(int argc, const char *argv[]) -> int{
     std::vector<aes::byte> input_bytes;
     std::vector<aes::byte> key_bytes;
     std::vector<aes::byte> IV_Bytes;
+    const char* message_file_name;
+    const char* iv_file_name;
     bool plaintext_provided = false;
     bool keyfile_provided = false;
     bool encrypt = false;
@@ -47,24 +61,24 @@ auto main(int argc, const char *argv[]) -> int{
     int mode = -1; 
 
 
-
     for(int i = 0; i < argc; i++){
         if(strncmp(argv[i], "-in", sizeof("-in")) == 0){
             // Read file
             read_binary_file(argv[i+1], input_bytes);
-            i++;
+        }
+
+        if(strncmp(argv[i], "-out", sizeof("-out")) == 0){
+                message_file_name = argv[i+1];
         }
 
         else if(strncmp(argv[i], "-k", sizeof("-k")) == 0){
             // Read key
             read_binary_file(argv[i+1], key_bytes);
-            i++;
         }
         
         else if(strncmp(argv[i], "-iv", sizeof("-iv")) == 0){
             // Read key
             read_binary_file(argv[i+1], IV_Bytes);
-            i++;
         }
 
         else if(strncmp(argv[i], "-d", sizeof("-d")) == 0){
@@ -76,20 +90,19 @@ auto main(int argc, const char *argv[]) -> int{
         }
 
         else if(strncmp(argv[i], "-m", sizeof("-m")) == 0){
-            i++;
-            if(strncmp(argv[i], "-ecb", sizeof("-ecb")) == 0){
+            if(strncmp(argv[i+1], "ecb", sizeof("ecb")) == 0){
                 mode = ECB;
             }
-            else if(strncmp(argv[i], "-cbc", sizeof("-cbc")) == 0){
+            else if(strncmp(argv[i+1], "cbc", sizeof("cbc")) == 0){
                 mode = CBC;
             }
-            else if(strncmp(argv[i], "-ctr", sizeof("-ctr")) == 0){
+            else if(strncmp(argv[i+1], "ctr", sizeof("ctr")) == 0){
                 mode = CTR;
             }
-            else if(strncmp(argv[i], "-cfb", sizeof("-cfb")) == 0){
+            else if(strncmp(argv[i+1], "cfb", sizeof("cfb")) == 0){
                 mode = CFB;
             }
-            else if(strncmp(argv[i], "-ofm", sizeof("-ofm")) == 0){
+            else if(strncmp(argv[i+1], "ofm", sizeof("ofm")) == 0){
                 mode = OFM;
             }
         }
@@ -108,11 +121,11 @@ auto main(int argc, const char *argv[]) -> int{
     if(mode == ECB){
         if(encrypt){
             std::vector<aes::byte> ciphertext = ciphermodes::ECB_Encrypt(input_bytes, key_bytes);
-            ciphermodes::print_blocks(ciphertext);
+            write_binary_file(message_file_name, ciphertext);
         }
         else if(decrypt){
-            std::vector<aes::byte> plaintext = ciphermodes::ECB_Encrypt(input_bytes, key_bytes);
-            ciphermodes::print_blocks(plaintext);
+            std::vector<aes::byte> plaintext = ciphermodes::ECB_Decrypt(input_bytes, key_bytes);
+            write_binary_file(message_file_name, plaintext);
         }
     }
     
@@ -121,47 +134,46 @@ auto main(int argc, const char *argv[]) -> int{
             aes:: Tuple<std::vector <aes::byte>, std::vector<aes::byte>> ciphertext = ciphermodes::CBC_Encrypt(input_bytes, key_bytes);
             std::vector <aes::byte> initialization_vector = ciphertext.element1;
             std::vector <aes::byte> encrypted_message = ciphertext.element2;
-            std::cout << "\nInitialization Vector:\n";
-            ciphermodes::print_blocks(ciphertext.element1);
-            std::cout << "\nEncrypted Message:\n";
-            ciphermodes::print_blocks(ciphertext.element2);
+            write_binary_file("IV", initialization_vector);
+            write_binary_file(message_file_name, encrypted_message);
         }
         else if(decrypt){
             std::vector<aes::byte> plaintext = ciphermodes::CBC_Decrypt(input_bytes, key_bytes, IV_Bytes); //NEEDS IV
-            ciphermodes::print_blocks(plaintext);
+            write_binary_file(message_file_name, plaintext);
         }
     }
 
     if(mode == CTR){
         if(encrypt){
             std::vector<aes::byte> ciphertext = ciphermodes::CTR_Encrypt(input_bytes,key_bytes);
-            ciphermodes::print_blocks(ciphertext);
+            write_binary_file(message_file_name, ciphertext);
         }
         else if(decrypt){
             std::vector<aes::byte> plaintext = ciphermodes::CTR_Decrypt(input_bytes,key_bytes);
-            ciphermodes::print_blocks(plaintext);
+            write_binary_file(message_file_name, plaintext);
         }
     }
 
     if(mode == CFB){
         if(encrypt){
             std::vector<aes::byte> ciphertext = ciphermodes::CFB_Encrypt(input_bytes,key_bytes);
-            ciphermodes::print_blocks(ciphertext);
+            write_binary_file(message_file_name, ciphertext);
         }
         else if(decrypt){
             std::vector<aes::byte> plaintext = ciphermodes::CFB_Decrypt(input_bytes,key_bytes);
-            ciphermodes::print_blocks(plaintext);
+            write_binary_file(message_file_name, plaintext);
         }
     }
 
     if(mode == OFM){
         if(encrypt){
             aes::Tuple<std::vector <aes::byte>, std::vector<aes::byte>> ciphertext = ciphermodes::OFM_Encrypt(input_bytes,key_bytes);
-            ciphermodes::print_blocks(ciphertext.element2);
+            write_binary_file("IV", ciphertext.element1);
+            write_binary_file(message_file_name, ciphertext.element2);
         }
         else if(decrypt){
             std::vector<aes::byte> plaintext = ciphermodes::OFM_Decrypt(input_bytes,key_bytes, IV_Bytes);
-            ciphermodes::print_blocks(plaintext);
+            write_binary_file(message_file_name, plaintext);
         }
     }
 
