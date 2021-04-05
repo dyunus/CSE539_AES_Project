@@ -42,6 +42,17 @@ namespace tb {
      */
     void test_ofm_mode_accuracy(std::vector<aes::byte>& plaintext_bytes, const std::vector<aes::byte>& key_bytes);
 
+    void test_ecb_mode(std::vector<aes::byte>& plaintext_bytes, const std::vector<aes::byte>& key_bytes);
+
+    void test_ctr_mode(std::vector<aes::byte>& plaintext_bytes, const std::vector<aes::byte>& key_bytes);
+
+    void test_cbc_mode(std::vector<aes::byte>& plaintext_bytes, const std::vector<aes::byte>& key_bytes);
+
+    void test_cfb_mode(std::vector<aes::byte>& plaintext_bytes, const std::vector<aes::byte>& key_bytes);
+
+    void test_key_expansion(const std::vector<aes::byte>& key_bytes);
+    
+    void test_aes();
     /**
      * @brief Function to call to test specific modules within the program
     * 
