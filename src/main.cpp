@@ -30,7 +30,10 @@ auto write_binary_file(const char *file_name, std::vector<aes::byte> &vec){
         std::cerr << "Unable to open " << file_name << "!\n";
         exit(1);
     }
-    for (const auto &e : vec) file << e;
+
+    for (const auto &e : vec) {
+        file << e;
+    }
 }
 
 
@@ -44,10 +47,11 @@ auto main(int argc, const char *argv[]) -> int{
     std::vector<aes::byte> input_bytes;
     std::vector<aes::byte> key_bytes;
     std::vector<aes::byte> IV_Bytes;
-    const char* message_file_name;
-    const char* iv_file_name;
+    const char* message_file_name; //storing the file name when parsing args
     bool plaintext_provided = false;
     bool keyfile_provided = false;
+    bool IV_provided = false;
+    bool outfile_provided = false;
     bool encrypt = false;
     bool decrypt = false;
      enum MODES_OF_OPERATION {
@@ -62,30 +66,49 @@ auto main(int argc, const char *argv[]) -> int{
 
 
     for(int i = 0; i < argc; i++){
+
+         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+            // Print help information
+            printf("%s\n", "Usage: aes_exec [OPTION]...");
+            printf("%-40s %s\n", "-h, --help", "Display this help text");
+            printf("%-40s %s\n", "-e, --encrypt", "Encrypt a given input");
+            printf("%-40s %s\n", "-d, --decrypt", "Decrypt a given input");
+            printf("%-40s %s\n", "-m <ecb | cbc | ctr | cfb | ofm>", "Designate a mode of operation");
+            printf("%-40s %s\n", "-in <argument>", "Input filename");
+            printf("%-40s %s\n", "-out <argument>", "Output filename");
+            printf("%-40s %s\n", "-k <argument>", "Specify key for AES");
+            printf("%-40s %s\n", "-iv <argument>", "Specify Initialazion Vector for certain modes of operation");
+            exit(0);
+        }
+
         if(strncmp(argv[i], "-in", sizeof("-in")) == 0){
             // Read file
             read_binary_file(argv[i+1], input_bytes);
+            plaintext_provided = true;
         }
 
         if(strncmp(argv[i], "-out", sizeof("-out")) == 0){
-                message_file_name = argv[i+1];
+            message_file_name = argv[i+1];
+            outfile_provided = true;
         }
 
         else if(strncmp(argv[i], "-k", sizeof("-k")) == 0){
             // Read key
             read_binary_file(argv[i+1], key_bytes);
+            keyfile_provided = true;
         }
         
         else if(strncmp(argv[i], "-iv", sizeof("-iv")) == 0){
             // Read key
             read_binary_file(argv[i+1], IV_Bytes);
+            IV_provided = true;
         }
 
-        else if(strncmp(argv[i], "-d", sizeof("-d")) == 0){
+        else if(strncmp(argv[i], "-d", sizeof("-d")) == 0|| strcmp(argv[i], "--decrypt") == 0){
             decrypt = true;
         }
 
-        else if(strncmp(argv[i], "-e", sizeof("-e")) == 0){
+        else if(strncmp(argv[i], "-e", sizeof("-e")) == 0|| strcmp(argv[i], "--encrypt") == 0){
             encrypt = true;
         }
 
@@ -111,12 +134,36 @@ auto main(int argc, const char *argv[]) -> int{
         }
     }
 
-    //ecb: 0
-    //cbc: 1
-    //ctr: 2
-    //cfb: 3
-    //ofm: 4
-    //DEBUGGING: 5
+    if(mode == -1){
+        std::cerr << "Please designate a mode of operation! USAGE: -m <ecb | cbc | ctr | cfb | ofm>\n";
+        exit(1);  
+    }
+    
+    if(encrypt && decrypt){
+        std::cerr << "ERROR: Both encryption and decryption options were selected\n";
+        exit(1);   
+    }
+
+    if(!keyfile_provided){
+        std::cerr << "Please provide a keyfile! USAGE: -k <argument>\n";
+        exit(1);
+    }
+
+    if(!plaintext_provided){
+        std::cerr << "Please provide a message file! USAGE: -in <argument>\n";
+        exit(1);
+    }
+
+    if(!outfile_provided && mode != DEBUG){
+        std::cerr << "Please provide an ouput file! USAGE: -out <argument>\n";
+        exit(1);
+    }
+
+    if(!IV_provided && decrypt && (mode == CBC || mode == OFM)){
+        std::cerr << "Please provide an IV file! USAGE: -iv <argument>\n";
+        exit(1);  
+    }
+
 
     if(mode == ECB){
         if(encrypt){
