@@ -1,6 +1,15 @@
 #include "ciphermodes.hpp"
 #include "yandom.hpp"
 
+void ciphermodes::print_blocks(std::vector<aes::byte> vec){
+    for (std::size_t i = 0; i < vec.size(); ++i) {
+        if (i % 16 == 0){
+            printf("\n");     
+        }
+    }
+    std::cout << std::endl;
+}
+
 void ciphermodes::pad_plaintext(std::vector<aes::byte>& plaintext_bytes){
 		aes::byte padNum = 16 - (plaintext_bytes.size() % 16);
         for(std::size_t i = 0; i < padNum; i++){
