@@ -72,13 +72,15 @@ void aes::inv_shift_rows(state &state) {
 auto aes::__field_multiply_by_2(byte s) -> aes::byte {
   byte result = s;
   byte sig_bit = s >> 7U;
+  byte xorByte;
   if (sig_bit == 0x00) {
-    result = s << 1U;
-    result ^= 0x00U;
-  } else {
-    byte shifted = s << 1U;
-    result = shifted ^ 0x1BU;
+    xorByte=0x00U;
+  } 
+  else {
+    xorByte=0x1BU;
   }
+  byte shifted = s<<1U;
+  result =shifted ^ xorByte;
   return result;
 }
 
@@ -97,7 +99,8 @@ auto aes::__field_multiply(byte s, uint8_t num) -> aes::byte {
        i--) {
     if (multiplication_order[i] == 2) {
       result = __field_multiply_by_2(result);
-    } else if (multiplication_order[i] == 1) {
+    } 
+    else if (multiplication_order[i] == 1) {
       result = result ^ s;
     }
   }

@@ -243,5 +243,13 @@ auto main(int argc, const char *argv[]) -> int{
         tb::test_key_expansion(key_bytes);
 
         tb::test_aes();
+
+	tb::test_shiftRow_timing();
+
+	tb::test_mixColumns_timing();
+
+	tb::test_subBytes_timing();
+
+	tb::test_fieldmultiply2_timing();
     }
 }

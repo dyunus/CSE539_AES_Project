@@ -54,7 +54,15 @@ namespace tb {
     void test_key_expansion(const std::vector<aes::byte>& key_bytes);
 
     void test_manual_sbox();    
-    
+   
+    void test_shiftRow_timing();
+
+    void test_mixColumns_timing();
+
+    void test_subBytes_timing();
+
+    void test_fieldmultiply2_timing();
+
     void test_aes();
     /**
      * @brief Function to call to test specific modules within the program

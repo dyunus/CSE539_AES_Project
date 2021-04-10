@@ -6,6 +6,7 @@
 #include <chrono>
 #include <random>
 #include "ciphermodes.hpp"
+#include "yandom.hpp"
 
 void tb::test_modules(unsigned long test_flags) {
     if (test_flags | TEST_NO_CACHE) {
@@ -227,17 +228,17 @@ void tb::test_manual_sbox(){
 
         for (const auto& i : lookup_values) {
             aes::byte val = aes::S_BOX.at(i);
-            auto ncache_start = std::chrono::steady_clock::now();
+            auto man_start = std::chrono::steady_clock::now();
             aes::byte val_other = aes::__get_S_BOX_value(i);
-            auto ncache_end = std::chrono::steady_clock::now();
+            auto man_end = std::chrono::steady_clock::now();
 
             if (val != val_other) {
                 std::cerr << "Val " << static_cast<int>(val) << " does not equal val_other " << static_cast<int>(val_other)
                 << "for index " << static_cast<int>(i) << "\n";
                 exit(1);
             } else {
-                auto ncache_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(ncache_end - ncache_start).count();
-                avg_runtimes[i] = (avg_runtimes[i] * l + ncache_ns) / (l + 1);
+                auto man_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(man_end - man_start).count();
+                avg_runtimes[i] = (avg_runtimes[i] * l + man_ns) / (l + 1);
             }
         }
     }
@@ -248,6 +249,146 @@ void tb::test_manual_sbox(){
     }
     std::cout <<"==========END MANUAL S-BOX TEST==========\n";
 }
+
+void tb:: test_shiftRow_timing(){
+	const unsigned int RUN_COUNT = 10000;
+
+	std::vector<double> avg_runtimes(5, 0.0);
+	std::vector<aes::state> states;
+	std::vector<int> shuffleVector = {0,1,2,3,4};
+	for(int i=0; i<5; i++){
+		auto temp = randgen<128>();
+		std::vector<aes::byte> arr;
+        	for(size_t i =0; i<16; i++){
+               		arr.push_back(temp[i]);
+        	}
+		aes:: state state = ciphermodes::convert_block_to_state(arr);
+		states.push_back(state);
+	}
+	std::random_device rd;
+	std::mt19937 g(rd());
+	for (std::size_t l = 0; l < RUN_COUNT; ++l) {
+		std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
+		for (const auto& i : shuffleVector) {
+			aes::state val = states[i];
+            		auto shift_start = std::chrono::steady_clock::now();
+            		aes::shift_rows(val);
+            		auto shift_end = std::chrono::steady_clock::now();
+                	auto shift_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(shift_end - shift_start).count();
+                	avg_runtimes[i] = (avg_runtimes[i] * l + shift_ns) / (l + 1);
+		}
+	}
+	std::cout <<"==========SHIFTROW TIMING TEST==========\n";
+    	for (int i = 0; i < 5; ++i) {
+		aes::__debug_print_state(states[i]);
+        	std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
+    	}
+    	std::cout <<"==========END SHIFTROW TIMING TEST==========\n";
+}
+
+void tb:: test_mixColumns_timing(){
+        const unsigned int RUN_COUNT = 10000;
+
+        std::vector<double> avg_runtimes(5, 0.0);
+        std::vector<aes::state> states;
+        std::vector<int> shuffleVector = {0,1,2,3,4};
+        for(int i=0; i<5; i++){
+                auto temp = randgen<128>();
+                std::vector<aes::byte> arr;
+                for(size_t i =0; i<16; i++){
+                        arr.push_back(temp[i]);
+                }
+                aes:: state state = ciphermodes::convert_block_to_state(arr);
+                states.push_back(state);
+        }
+        std::random_device rd;
+        std::mt19937 g(rd());
+        for (std::size_t l = 0; l < RUN_COUNT; ++l) {
+                std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
+                for (const auto& i : shuffleVector) {
+                        aes::state val = states[i];
+                        auto mix_start = std::chrono::steady_clock::now();
+                        aes::mix_columns(val);
+                        auto mix_end = std::chrono::steady_clock::now();
+                        auto mix_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(mix_end - mix_start).count();
+                        avg_runtimes[i] = (avg_runtimes[i] * l + mix_ns) / (l + 1);
+                }
+        }
+        std::cout <<"==========MIXCOLUMNS TIMING TEST==========\n";
+        for (int i = 0; i < 5; ++i) {
+                aes::__debug_print_state(states[i]);
+                std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
+        }
+        std::cout <<"==========END MIXCOLUMNS TIMING TEST==========\n";
+}
+
+void tb:: test_subBytes_timing(){
+        const unsigned int RUN_COUNT = 10000;
+
+        std::vector<double> avg_runtimes(5, 0.0);
+        std::vector<aes::state> states;
+        std::vector<int> shuffleVector = {0,1,2,3,4};
+        for(int i=0; i<5; i++){
+                auto temp = randgen<128>();
+                std::vector<aes::byte> arr;
+                for(size_t i =0; i<16; i++){
+                        arr.push_back(temp[i]);
+                }
+                aes:: state state = ciphermodes::convert_block_to_state(arr);
+                states.push_back(state);
+        }
+        std::random_device rd;
+        std::mt19937 g(rd());
+        for (std::size_t l = 0; l < RUN_COUNT; ++l) {
+                std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
+                for (const auto& i : shuffleVector) {
+                        aes::state val = states[i];
+                        auto sub_start = std::chrono::steady_clock::now();
+                        aes::sub_bytes(val);
+                        auto sub_end = std::chrono::steady_clock::now();
+                        auto sub_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(sub_end - sub_start).count();
+                        avg_runtimes[i] = (avg_runtimes[i] * l + sub_ns) / (l + 1);
+                }
+        }
+        std::cout <<"==========SUBBYTES TIMING TEST==========\n";
+        for (int i = 0; i < 5; ++i) {
+                aes::__debug_print_state(states[i]);
+                std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
+        }
+        std::cout <<"==========END SUBBYTES TIMING TEST==========\n";
+}
+
+void tb::test_fieldmultiply2_timing(){
+    const unsigned int RUN_COUNT = 10000;
+
+    // Set up vectors to track runtime information
+    std::vector<double> avg_runtimes(256, 0.0);
+    std::vector<aes::byte> lookup_values{};
+    for (std::size_t i = 0; i < 256; ++i) {
+        lookup_values.push_back(static_cast<aes::byte>(i));
+    }
+    std::random_device rd;
+    std::mt19937 g(rd());
+
+    for (std::size_t l = 0; l < RUN_COUNT; ++l) {
+        std::shuffle(lookup_values.begin(), lookup_values.end(), g); // Shuffle order of execution for each run
+
+        for (const auto& i : lookup_values) {
+            auto mult_start = std::chrono::steady_clock::now();
+            aes::byte val = aes::__field_multiply_by_2(i);
+            auto mult_end = std::chrono::steady_clock::now();
+            auto mult_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(mult_end - mult_start).count();
+            avg_runtimes[i] = (avg_runtimes[i] * l + mult_ns) / (l + 1);
+        }
+    }
+
+    std::cout <<"==========FIELDMULTIPLYBY2 TIMING  TEST==========\n";
+    for (int i = 0; i < 256; ++i) {
+        std::cout << static_cast<std::size_t>(i) << ": " << static_cast<int>(avg_runtimes[i]) << "\n";
+    }
+    std::cout <<"==========END FIELDMULTIPYBY2 TIMING TEST==========\n";
+}
+
 
 void tb::test_aes(){
 
