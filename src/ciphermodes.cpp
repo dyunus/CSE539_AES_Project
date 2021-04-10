@@ -361,8 +361,8 @@ auto ciphermodes::OFM_Decrypt(const std::vector<aes::byte>& ciphertext_bytes, co
         )
     );
 
-    std::cout << ciphertext_blocks.size() << std::endl;
-    std::cout << plaintext_blocks.size() << std::endl;
+    // std::cout << ciphertext_blocks.size() << std::endl;
+    // std::cout << plaintext_blocks.size() << std::endl;
     // Iterate from 1...N blocks
     for (std::size_t i = 1; i < ciphertext_blocks.size(); ++i) {
 

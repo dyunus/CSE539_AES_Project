@@ -26,6 +26,7 @@ namespace tb {
             if (i % 16 == 0){
                 printf("\n");     
             }
+            printf("0x%02x ", vec[i]);
         }
         std::cout << std::endl;
     }
