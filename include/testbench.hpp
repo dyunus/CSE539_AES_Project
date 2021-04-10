@@ -51,6 +51,8 @@ namespace tb {
     void test_cfb_mode(std::vector<aes::byte>& plaintext_bytes, const std::vector<aes::byte>& key_bytes);
 
     void test_key_expansion(const std::vector<aes::byte>& key_bytes);
+
+    void test_manual_sbox();    
     
     void test_aes();
     /**

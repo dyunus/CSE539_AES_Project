@@ -6,6 +6,7 @@
 #include "testbench.hpp"
 #include <vector>
 #include "yandom.hpp"
+#include <cstring>
 
 auto read_binary_file(const char *file_name, std::vector<aes::byte> &vec){
     std::ifstream file(file_name, std::ios::in | std::ios::binary);
@@ -226,8 +227,10 @@ auto main(int argc, const char *argv[]) -> int{
 
     if(mode == DEBUG){
         test_modules(tb::TEST_NO_CACHE);
-
-        tb::test_ecb_mode(input_bytes, key_bytes);
+	
+	tb::test_manual_sbox();
+        
+	tb::test_ecb_mode(input_bytes, key_bytes);
 
         tb::test_cbc_mode(input_bytes, key_bytes);
 
