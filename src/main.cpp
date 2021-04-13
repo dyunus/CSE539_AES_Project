@@ -51,7 +51,6 @@ auto main(int argc, const char *argv[]) -> int{
     const char* message_file_name; //storing the file name when parsing args
     bool plaintext_provided = false;
     bool keyfile_provided = false;
-    bool IV_provided = false;
     bool outfile_provided = false;
     bool encrypt = false;
     bool decrypt = false;
@@ -78,7 +77,6 @@ auto main(int argc, const char *argv[]) -> int{
             printf("%-40s %s\n", "-in <argument>", "Input filename");
             printf("%-40s %s\n", "-out <argument>", "Output filename");
             printf("%-40s %s\n", "-k <argument>", "Specify key for AES");
-            printf("%-40s %s\n", "-iv <argument>", "Specify Initialazion Vector for certain modes of operation");
             exit(0);
         }
 
@@ -97,12 +95,6 @@ auto main(int argc, const char *argv[]) -> int{
             // Read key
             read_binary_file(argv[i+1], key_bytes);
             keyfile_provided = true;
-        }
-        
-        else if(strncmp(argv[i], "-iv", sizeof("-iv")) == 0){
-            // Read key
-            read_binary_file(argv[i+1], IV_Bytes);
-            IV_provided = true;
         }
 
         else if(strncmp(argv[i], "-d", sizeof("-d")) == 0|| strcmp(argv[i], "--decrypt") == 0){
@@ -160,11 +152,6 @@ auto main(int argc, const char *argv[]) -> int{
         exit(1);
     }
 
-    if(!IV_provided && decrypt && (mode == OFM)){
-        std::cerr << "Please provide an IV file! USAGE: -iv <argument>\n";
-        exit(1);  
-    }
-
 
     if(mode == ECB){
         if(encrypt){
@@ -213,12 +200,11 @@ auto main(int argc, const char *argv[]) -> int{
 
     if(mode == OFM){
         if(encrypt){
-            aes::Tuple<std::vector <aes::byte>, std::vector<aes::byte>> ciphertext = ciphermodes::OFM_Encrypt(input_bytes,key_bytes);
-            write_binary_file("IV", ciphertext.element1);
-            write_binary_file(message_file_name, ciphertext.element2);
+            std::vector<aes::byte> ciphertext = ciphermodes::OFM_Encrypt(input_bytes,key_bytes);
+            write_binary_file(message_file_name, ciphertext);
         }
         else if(decrypt){
-            std::vector<aes::byte> plaintext = ciphermodes::OFM_Decrypt(input_bytes,key_bytes, IV_Bytes);
+            std::vector<aes::byte> plaintext = ciphermodes::OFM_Decrypt(input_bytes,key_bytes);
             write_binary_file(message_file_name, plaintext);
         }
     }
@@ -226,46 +212,46 @@ auto main(int argc, const char *argv[]) -> int{
     if(mode == DEBUG){
         test_modules(tb::TEST_NO_CACHE);
 	
-	tb::test_manual_sbox();
+        tb::test_ofm_mode_accuracy(input_bytes, key_bytes);
         
-	tb::test_ecb_mode(input_bytes, key_bytes);
+	    tb::test_manual_sbox();
+        
+	    tb::test_ecb_mode(input_bytes, key_bytes);
 
         tb::test_cbc_mode(input_bytes, key_bytes);
 
         tb::test_ctr_mode(input_bytes, key_bytes);
 
-        tb::test_cfb_mode(input_bytes, key_bytes);
-
-        tb::test_ofm_mode_accuracy(input_bytes, key_bytes);
+        tb::test_cfb_mode(input_bytes, key_bytes);        
     
         tb::test_key_expansion(key_bytes);
 
         tb::test_aes();
 
-	tb::test_shiftRow_timing();
+        tb::test_shiftRow_timing();
 
-	tb::test_mixColumns_timing();
+        tb::test_mixColumns_timing();
 
-	tb::test_subBytes_timing();
+        tb::test_subBytes_timing();
 
-	tb::test_fieldmultiply2_timing();
+        tb::test_fieldmultiply2_timing();
 
-	tb:: test_addRounkey_state_timing();
+        tb:: test_addRounkey_state_timing();
 
-	tb:: test_addRounkey_roundkey_timing();
+        tb:: test_addRounkey_roundkey_timing();
 
-	tb:: test_addRounkey_timing();
+        tb:: test_addRounkey_timing();
 
-	tb:: test_keyexpansion128_timing();
+        tb:: test_keyexpansion128_timing();
 
-	tb:: test_keyexpansion192_timing();
+        tb:: test_keyexpansion192_timing();
 
-	tb:: test_keyexpansion256_timing();
+        tb:: test_keyexpansion256_timing();
 
-	tb::test_aes128_text_timing();
+        tb::test_aes128_text_timing();
 
-	tb::test_aes192_text_timing();
+        tb::test_aes192_text_timing();
 
-	tb::test_aes256_text_timing();
+        tb::test_aes256_text_timing();
     }
 }

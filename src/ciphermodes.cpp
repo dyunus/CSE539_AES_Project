@@ -273,8 +273,7 @@ auto ciphermodes::CFB_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std
     return plaintext_bytes;
 }
 
-
-auto ciphermodes::OFM_Encrypt(const std::vector<aes::byte>& plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> aes::CipherTuple {
+auto ciphermodes::OFM_Encrypt(const std::vector<aes::byte>& plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte> {
     using block_vector = std::vector<std::vector<aes::byte>>; // Shorthand notation
 
     const auto NK_NR = aes::get_Nk_Nr(key_bytes.size());
@@ -291,7 +290,6 @@ auto ciphermodes::OFM_Encrypt(const std::vector<aes::byte>& plaintext_bytes, con
 
     auto IV = randgen<128>(); // Random nonce used in first iteration of OFM
 
-    
     // Prepare ciphertext_blocks[0] as encrypted IV XOR m[0]
     auto IV_state = convert_block_to_state<128>(IV);
     aes::encrypt(NR, IV_state, expanded_key);
@@ -323,10 +321,10 @@ auto ciphermodes::OFM_Encrypt(const std::vector<aes::byte>& plaintext_bytes, con
         );
     }
 
-    return aes::CipherTuple(std::vector<aes::byte>(IV.begin(), IV.end()), merge_blocks(ciphertext_blocks));
+    return merge_IV_blocks<16>(IV, ciphertext_blocks);
 }
 
-auto ciphermodes::OFM_Decrypt(const std::vector<aes::byte>& ciphertext_bytes, const std::vector<aes::byte>& key_bytes, const std::vector<aes::byte>& IV) -> std::vector<aes::byte> {
+auto ciphermodes::OFM_Decrypt(const std::vector<aes::byte>& ciphertext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte> {
     using block_vector = std::vector<std::vector<aes::byte>>; // Shorthand notation
 
     const auto NK_NR = aes::get_Nk_Nr(key_bytes.size());
@@ -336,9 +334,12 @@ auto ciphermodes::OFM_Decrypt(const std::vector<aes::byte>& ciphertext_bytes, co
     // Key expansion
     std::vector<aes::word> expanded_key(aes::NB * (NR + 1));
     aes::key_expansion(key_bytes, expanded_key, NK, NR);
-    
     block_vector ciphertext_blocks = create_blocks(ciphertext_bytes);
     block_vector plaintext_blocks{};
+
+    // Extract IV from the ciphertext's block (the first) and remove it from the ciphertext_blocks
+    std::vector<aes::byte> IV{ciphertext_blocks[0]};
+    ciphertext_blocks.erase(ciphertext_blocks.begin());
 
     // Prepare message_blocks[0] as XOR of cipher[0] and encrypted IV
     auto IV_state = convert_block_to_state(IV);

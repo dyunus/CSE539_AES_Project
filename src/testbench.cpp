@@ -58,11 +58,12 @@ void tb::test_ofm_mode_accuracy(std::vector<aes::byte>& plaintext_bytes, const s
     std::cout << "Plaintext\n";
     __print_vector<aes::byte>(plaintext_bytes);
     
-    aes::CipherTuple cipher_tuple = ciphermodes::OFM_Encrypt(plaintext_bytes, key_bytes);
+    std::vector<aes::byte> ciphertext = ciphermodes::OFM_Encrypt(plaintext_bytes, key_bytes);
     std::cout << "OFM Ciphertext\n";
-    __print_vector<aes::byte>(cipher_tuple.element2);
+    __print_vector<aes::byte>(ciphertext);
 
-    auto decrypted_plaintext_bytes = ciphermodes::OFM_Decrypt(cipher_tuple.element2, key_bytes, cipher_tuple.element1);
+    auto decrypted_plaintext_bytes = ciphermodes::OFM_Decrypt(ciphertext, key_bytes);
+    
     std::cout << "OFM Decrypted\n";
     __print_vector<aes::byte>(decrypted_plaintext_bytes);
 
