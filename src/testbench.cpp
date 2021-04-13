@@ -130,16 +130,12 @@ void tb::test_cbc_mode(std::vector<aes::byte>& plaintext_bytes, const std::vecto
     std::cout << "Plaintext\n";
     __print_vector<aes::byte>(plaintext_bytes);
     
-    aes:: Tuple<std::vector <aes::byte>, std::vector<aes::byte>> ciphertext = ciphermodes::CBC_Encrypt(plaintext_bytes, key_bytes);
-
-    std::vector<aes::byte> IV = ciphertext.element1;
-    std::vector<aes::byte> ciphertext_bytes = ciphertext.element2;
-    
-    
+    std::vector<aes::byte> ciphertext_bytes = ciphermodes::CBC_Encrypt(plaintext_bytes, key_bytes);
+        
     std::cout << "\nCBC Ciphertext:\n";
     __print_vector<aes::byte>(ciphertext_bytes);
 
-    std::vector<aes::byte> decrypted_bytes = ciphermodes::CBC_Decrypt(ciphertext_bytes, key_bytes, IV);
+    std::vector<aes::byte> decrypted_bytes = ciphermodes::CBC_Decrypt(ciphertext_bytes, key_bytes);
     
     std::cout << "\nCBC Decrypted:\n";
     __print_vector<aes::byte>(decrypted_bytes);

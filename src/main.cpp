@@ -160,7 +160,7 @@ auto main(int argc, const char *argv[]) -> int{
         exit(1);
     }
 
-    if(!IV_provided && decrypt && (mode == CBC || mode == OFM)){
+    if(!IV_provided && decrypt && (mode == OFM)){
         std::cerr << "Please provide an IV file! USAGE: -iv <argument>\n";
         exit(1);  
     }
@@ -179,14 +179,12 @@ auto main(int argc, const char *argv[]) -> int{
     
     if(mode == CBC){
         if(encrypt){
-            aes:: Tuple<std::vector <aes::byte>, std::vector<aes::byte>> ciphertext = ciphermodes::CBC_Encrypt(input_bytes, key_bytes);
-            std::vector <aes::byte> initialization_vector = ciphertext.element1;
-            std::vector <aes::byte> encrypted_message = ciphertext.element2;
-            write_binary_file("IV", initialization_vector);
+            std::vector<aes::byte> ciphertext = ciphermodes::CBC_Encrypt(input_bytes, key_bytes);
+            std::vector <aes::byte> encrypted_message = ciphertext;
             write_binary_file(message_file_name, encrypted_message);
         }
         else if(decrypt){
-            std::vector<aes::byte> plaintext = ciphermodes::CBC_Decrypt(input_bytes, key_bytes, IV_Bytes); //NEEDS IV
+            std::vector<aes::byte> plaintext = ciphermodes::CBC_Decrypt(input_bytes, key_bytes);
             write_binary_file(message_file_name, plaintext);
         }
     }
