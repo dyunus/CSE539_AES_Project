@@ -272,23 +272,15 @@ auto aes::__spliceKey(int round, const std::vector<word> &key) -> aes::state {
 void aes::encrypt(int Nr, state &state, const std::vector<word> &w) {
   aes::state roundKey = __spliceKey(0, w);
   add_round_key(state, roundKey);
-  //__debug_print_state(state);
   for (std::size_t i = 1; i < Nr; i++) {
-    // printf("Round number %d\n",i);
     sub_bytes(state);
-    //__debug_print_state(state);
     shift_rows(state);
-    //__debug_print_state(state);
     mix_columns(state);
-    //__debug_print_state(state);
     roundKey = __spliceKey(i, w);
     add_round_key(state, roundKey);
-    //__debug_print_state(state);
   }
   sub_bytes(state);
-  //__debug_print_state(state);
   shift_rows(state);
-  //__debug_print_state(state);
   roundKey = __spliceKey(Nr, w);
   add_round_key(state, roundKey);
 }

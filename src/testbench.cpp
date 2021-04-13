@@ -208,7 +208,7 @@ void tb::test_key_expansion(const std::vector<aes::byte>& key_bytes){
 }
 
 void tb::test_manual_sbox(){
-    const unsigned int RUN_COUNT = 10000;
+    const unsigned int RUN_COUNT = 100000;
 
     // Set up vectors to track runtime information
     std::vector<double> avg_runtimes(256, 0.0);
@@ -247,7 +247,7 @@ void tb::test_manual_sbox(){
 }
 
 void tb:: test_shiftRow_timing(){
-	const unsigned int RUN_COUNT = 10000;
+	const unsigned int RUN_COUNT = 100000;
 
 	std::vector<double> avg_runtimes(5, 0.0);
 	std::vector<aes::state> states;
@@ -283,7 +283,7 @@ void tb:: test_shiftRow_timing(){
 }
 
 void tb:: test_mixColumns_timing(){
-        const unsigned int RUN_COUNT = 10000;
+        const unsigned int RUN_COUNT = 100000;
 
         std::vector<double> avg_runtimes(5, 0.0);
         std::vector<aes::state> states;
@@ -319,7 +319,7 @@ void tb:: test_mixColumns_timing(){
 }
 
 void tb:: test_subBytes_timing(){
-        const unsigned int RUN_COUNT = 10000;
+        const unsigned int RUN_COUNT = 100000;
 
         std::vector<double> avg_runtimes(5, 0.0);
         std::vector<aes::state> states;
@@ -355,7 +355,7 @@ void tb:: test_subBytes_timing(){
 }
 
 void tb::test_fieldmultiply2_timing(){
-    const unsigned int RUN_COUNT = 10000;
+    const unsigned int RUN_COUNT = 100000;
 
     // Set up vectors to track runtime information
     std::vector<double> avg_runtimes(256, 0.0);
@@ -385,8 +385,8 @@ void tb::test_fieldmultiply2_timing(){
     std::cout <<"==========END FIELDMULTIPYBY2 TIMING TEST==========\n";
 }
 
-void tb:: test_addRounkey_state_timing_test(){
-	const unsigned int RUN_COUNT = 10000;
+void tb:: test_addRounkey_state_timing(){
+	const unsigned int RUN_COUNT = 100000;
 
         std::vector<double> avg_runtimes(5, 0.0);
         std::vector<aes::state> states;
@@ -426,8 +426,8 @@ void tb:: test_addRounkey_state_timing_test(){
         std::cout <<"==========END ADDROUNDKEY STATE TIMING TEST==========\n";
 }
 
-void tb:: test_addRounkey_roundkey_timing_test(){
-        const unsigned int RUN_COUNT = 10000;
+void tb:: test_addRounkey_roundkey_timing(){
+        const unsigned int RUN_COUNT = 100000;
 
         std::vector<double> avg_runtimes(5, 0.0);
         std::vector<aes::state> roundkeys;
@@ -467,8 +467,8 @@ void tb:: test_addRounkey_roundkey_timing_test(){
         std::cout <<"==========END ADDROUNDKEY ROUNDKEY TIMING TEST==========\n";
 }
 
-void tb:: test_addRounkey_timing_test(){
-        const unsigned int RUN_COUNT = 10000;
+void tb:: test_addRounkey_timing(){
+        const unsigned int RUN_COUNT = 100000;
 
         std::vector<double> avg_runtimes(5, 0.0);
         std::vector<aes::state> states;
@@ -512,6 +512,286 @@ void tb:: test_addRounkey_timing_test(){
                 std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
         }
         std::cout <<"==========END ADDROUNDKEY TIMING TEST==========\n";
+}
+
+void tb:: test_keyexpansion128_timing(){
+	const unsigned int RUN_COUNT = 100000;
+
+	int Nk = 4;
+        int Nr = 10;
+	std::vector<double> avg_runtimes(5, 0.0);
+        std::vector<std::vector<aes::byte>> keys;
+        std::vector<int> shuffleVector = {0,1,2,3,4};
+        for(int i=0; i<5; i++){
+                auto temp = randgen<128>();
+                std::vector<aes::byte> key;
+                for(size_t i =0; i<16; i++){
+                        key.push_back(temp[i]);
+                }
+                keys.push_back(key);
+        }
+        std::random_device rd;
+        std::mt19937 g(rd());
+        for (std::size_t l = 0; l < RUN_COUNT; ++l) {
+                std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
+                for (const auto& i : shuffleVector) {
+                        std::vector<aes::word> expandedKey(aes::NB * (Nr + 1));
+			std::vector<aes::byte> val = keys[i];
+			auto exp_start = std::chrono::steady_clock::now();
+                        aes::key_expansion(val, expandedKey, Nk, Nr);
+                        auto exp_end = std::chrono::steady_clock::now();
+                        auto exp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(exp_end - exp_start).count();
+                        avg_runtimes[i] = (avg_runtimes[i] * l + exp_ns) / (l + 1);
+                }
+        }
+        std::cout <<"==========KEYEXPANSION128 TIMING TEST==========\n";
+        for (int i = 0; i < 5; ++i) {
+		std::cout<<"Key: ";
+		for(size_t j=0; j<keys[i].size(); j++){
+			 printf("0x%02x ", keys.at(i).at(j));
+		}
+                std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
+        }
+        std::cout <<"==========END KEYEXPANSION128 TIMING TEST==========\n";
+
+}
+
+void tb:: test_keyexpansion192_timing(){
+        const unsigned int RUN_COUNT = 100000;
+
+        int Nk = 6;
+        int Nr = 12;
+        std::vector<double> avg_runtimes(5, 0.0);
+        std::vector<std::vector<aes::byte>> keys;
+        std::vector<int> shuffleVector = {0,1,2,3,4};
+        for(int i=0; i<5; i++){
+                auto temp = randgen<256>();
+                std::vector<aes::byte> key;
+                for(size_t i =0; i<24; i++){
+                        key.push_back(temp[i]);
+                }
+                keys.push_back(key);
+        }
+        std::random_device rd;
+        std::mt19937 g(rd());
+        for (std::size_t l = 0; l < RUN_COUNT; ++l) {
+                std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
+                for (const auto& i : shuffleVector) {
+                        std::vector<aes::word> expandedKey(aes::NB * (Nr + 1));
+			std::vector<aes::byte> val = keys[i];
+			auto exp_start = std::chrono::steady_clock::now();
+                        aes::key_expansion(val, expandedKey, Nk, Nr);
+                        auto exp_end = std::chrono::steady_clock::now();
+                        auto exp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(exp_end - exp_start).count();
+                        avg_runtimes[i] = (avg_runtimes[i] * l + exp_ns) / (l + 1);
+                }
+        }
+        std::cout <<"==========KEYEXPANSION192 TIMING TEST==========\n";
+        for (int i = 0; i < 5; ++i) {
+                std::cout<<"Key: ";
+                for(size_t j=0; j<keys[i].size(); j++){
+                         printf("0x%02x ", keys.at(i).at(j));
+                }
+                std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
+        }
+        std::cout <<"==========END KEYEXPANSION192 TIMING TEST==========\n";
+
+}
+
+
+void tb:: test_keyexpansion256_timing(){
+        const unsigned int RUN_COUNT = 100000;
+
+        int Nk = 8;
+        int Nr = 14;
+        std::vector<double> avg_runtimes(5, 0.0);
+        std::vector<std::vector<aes::byte>> keys;
+        std::vector<int> shuffleVector = {0,1,2,3,4};
+        for(int i=0; i<5; i++){
+                auto temp = randgen<256>();
+                std::vector<aes::byte> key;
+                for(size_t i =0; i<32; i++){
+                        key.push_back(temp[i]);
+                }
+                keys.push_back(key);
+        }
+        std::random_device rd;
+        std::mt19937 g(rd());
+        for (std::size_t l = 0; l < RUN_COUNT; ++l) {
+                std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
+                for (const auto& i : shuffleVector) {
+                        std::vector<aes::word> expandedKey(aes::NB * (Nr + 1));
+                        std::vector<aes::byte> val = keys[i];
+                        auto exp_start = std::chrono::steady_clock::now();
+                        aes::key_expansion(val, expandedKey, Nk, Nr);
+                        auto exp_end = std::chrono::steady_clock::now();
+                        auto exp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(exp_end - exp_start).count();
+                        avg_runtimes[i] = (avg_runtimes[i] * l + exp_ns) / (l + 1);
+                }
+        }
+        std::cout <<"==========KEYEXPANSION256 TIMING TEST==========\n";
+        for (int i = 0; i < 5; ++i) {
+                std::cout<<"Key: ";
+                for(size_t j=0; j<keys[i].size(); j++){
+                         printf("0x%02x ", keys.at(i).at(j));
+                }
+                std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
+        }
+        std::cout <<"==========END KEYEXPANSION256 TIMING TEST==========\n";
+
+}
+
+void tb::test_aes128_text_timing(){
+	const unsigned int RUN_COUNT = 200000;
+
+        int Nk = 4;
+        int Nr = 10;
+        std::vector<double> avg_runtimes(5, 0.0);
+        std::vector<aes::state> texts;
+        std::vector<int> shuffleVector = {0,1,2,3,4};
+        for(int i=0; i<5; i++){
+                auto temp = randgen<128>();
+                std::vector<aes::byte> arr;
+                for(size_t i =0; i<16; i++){
+                        arr.push_back(temp[i]);
+                }
+		aes::state text = ciphermodes::convert_block_to_state(arr);
+                texts.push_back(text);
+        }
+	auto temp =randgen<128>();
+        std::vector<aes::byte> key;
+        for(size_t i=0; i<16; i++){
+                key.push_back(temp[i]);
+        }
+	std::vector<aes::word>expandedKey(aes::NB*(Nr+1));
+	aes::key_expansion(key,expandedKey, Nk,Nr);
+        std::random_device rd;
+        std::mt19937 g(rd());
+        for (std::size_t l = 0; l < RUN_COUNT; ++l) {
+                std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
+                for (const auto& i : shuffleVector) {
+                        std::vector<aes::word> expandedKey(aes::NB * (Nr + 1));
+			aes::state val = texts[i];
+                        auto enc_start = std::chrono::steady_clock::now();
+                        aes::encrypt(Nr, val, expandedKey);
+                        auto enc_end = std::chrono::steady_clock::now();
+                        auto enc_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(enc_end - enc_start).count();
+                        avg_runtimes[i] = (avg_runtimes[i] * l + enc_ns) / (l + 1);
+                }
+        }
+        std::cout <<"==========AES128 TEXT TIMING TEST==========\n";
+	std::cout<<"Key: ";
+        for(size_t j=0; j<key.size(); j++){
+                printf("0x%02x ", key.at(j));
+        }
+	printf("\n");
+	for (int i = 0; i < 5; ++i) {
+                aes::__debug_print_state(texts[i]);
+                std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
+        }
+        std::cout <<"==========END AES128 TEXT TIMING TEST==========\n";
+}
+
+void tb::test_aes192_text_timing(){
+        const unsigned int RUN_COUNT = 200000;
+
+        int Nk = 6;
+        int Nr = 12;
+        std::vector<double> avg_runtimes(5, 0.0);
+        std::vector<aes::state> texts;
+        std::vector<int> shuffleVector = {0,1,2,3,4};
+        for(int i=0; i<5; i++){
+                auto temp = randgen<128>();
+                std::vector<aes::byte> arr;
+                for(size_t i =0; i<16; i++){
+                        arr.push_back(temp[i]);
+                }
+                aes::state text = ciphermodes::convert_block_to_state(arr);
+                texts.push_back(text);
+        }
+        auto temp =randgen<256>();
+        std::vector<aes::byte> key;
+        for(size_t i=0; i<24; i++){
+                key.push_back(temp[i]);
+        }
+        std::vector<aes::word>expandedKey(aes::NB*(Nr+1));
+        aes::key_expansion(key,expandedKey, Nk,Nr);
+        std::random_device rd;
+        std::mt19937 g(rd());
+        for (std::size_t l = 0; l < RUN_COUNT; ++l) {
+                std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
+                for (const auto& i : shuffleVector) {
+                        std::vector<aes::word> expandedKey(aes::NB * (Nr + 1));
+                        aes::state val = texts[i];
+                        auto enc_start = std::chrono::steady_clock::now();
+                        aes::encrypt(Nr, val, expandedKey);
+                        auto enc_end = std::chrono::steady_clock::now();
+                        auto enc_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(enc_end - enc_start).count();
+                        avg_runtimes[i] = (avg_runtimes[i] * l + enc_ns) / (l + 1);
+                }
+        }
+	std::cout <<"==========AES192 TEXT TIMING TEST==========\n";
+        std::cout<<"Key: ";
+        for(size_t j=0; j<key.size(); j++){
+                printf("0x%02x ", key.at(j));
+        }
+	printf("\n");
+        for (int i = 0; i < 5; ++i) {
+                aes::__debug_print_state(texts[i]);
+                std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
+        }
+        std::cout <<"==========END AES192 TEXT TIMING TEST==========\n";
+}
+
+void tb::test_aes256_text_timing(){
+        const unsigned int RUN_COUNT = 200000;
+
+        int Nk = 8;
+        int Nr = 14;
+        std::vector<double> avg_runtimes(5, 0.0);
+        std::vector<aes::state> texts;
+        std::vector<int> shuffleVector = {0,1,2,3,4};
+        for(int i=0; i<5; i++){
+                auto temp = randgen<128>();
+                std::vector<aes::byte> arr;
+                for(size_t i =0; i<16; i++){
+                        arr.push_back(temp[i]);
+                }
+                aes::state text = ciphermodes::convert_block_to_state(arr);
+                texts.push_back(text);
+        }
+        auto temp =randgen<256>();
+        std::vector<aes::byte> key;
+        for(size_t i=0; i<32; i++){
+                key.push_back(temp[i]);
+        }
+        std::vector<aes::word>expandedKey(aes::NB*(Nr+1));
+        aes::key_expansion(key,expandedKey, Nk,Nr);
+        std::random_device rd;
+        std::mt19937 g(rd());
+        for (std::size_t l = 0; l < RUN_COUNT; ++l) {
+                std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
+                for (const auto& i : shuffleVector) {
+                        std::vector<aes::word> expandedKey(aes::NB * (Nr + 1));
+                        aes::state val = texts[i];
+                        auto enc_start = std::chrono::steady_clock::now();
+                        aes::encrypt(Nr, val, expandedKey);
+                        auto enc_end = std::chrono::steady_clock::now();
+                        auto enc_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(enc_end - enc_start).count();
+                        avg_runtimes[i] = (avg_runtimes[i] * l + enc_ns) / (l + 1);
+                }
+        }
+	std::cout <<"==========AES256 TEXT TIMING TEST==========\n";
+        std::cout<<"Key: ";
+        for(size_t j=0; j<key.size(); j++){
+                printf("0x%02x ", key.at(j));
+        }
+	printf("\n");
+        for (int i = 0; i < 5; ++i) {
+                aes::__debug_print_state(texts[i]);
+                std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
+        }
+        std::cout <<"==========END AES256 TEXT TIMING TEST==========\n";
 }
 
 

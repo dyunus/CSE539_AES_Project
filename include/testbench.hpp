@@ -63,11 +63,23 @@ namespace tb {
 
     void test_fieldmultiply2_timing();
 
-    void test_addRounkey_state_timing_test();
+    void test_addRounkey_state_timing();
 
-    void test_addRounkey_roundkey_timing_test();
+    void test_addRounkey_roundkey_timing();
 
-    void test_addRounkey_timing_test();
+    void test_addRounkey_timing();
+
+    void test_keyexpansion128_timing();
+
+    void test_keyexpansion192_timing();
+
+    void test_keyexpansion256_timing();
+
+    void test_aes128_text_timing();
+
+    void test_aes192_text_timing();
+
+    void test_aes256_text_timing();
 
     void test_aes();
     /**

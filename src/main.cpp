@@ -250,10 +250,22 @@ auto main(int argc, const char *argv[]) -> int{
 
 	tb::test_fieldmultiply2_timing();
 
-	tb:: test_addRounkey_state_timing_test();
+	tb:: test_addRounkey_state_timing();
 
-	tb:: test_addRounkey_roundkey_timing_test();
+	tb:: test_addRounkey_roundkey_timing();
 
-	tb:: test_addRounkey_timing_test();
+	tb:: test_addRounkey_timing();
+
+	tb:: test_keyexpansion128_timing();
+
+	tb:: test_keyexpansion192_timing();
+
+	tb:: test_keyexpansion256_timing();
+
+	tb::test_aes128_text_timing();
+
+	tb::test_aes192_text_timing();
+
+	tb::test_aes256_text_timing();
     }
 }
