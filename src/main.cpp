@@ -251,5 +251,11 @@ auto main(int argc, const char *argv[]) -> int{
 	tb::test_subBytes_timing();
 
 	tb::test_fieldmultiply2_timing();
+
+	tb:: test_addRounkey_state_timing_test();
+
+	tb:: test_addRounkey_roundkey_timing_test();
+
+	tb:: test_addRounkey_timing_test();
     }
 }

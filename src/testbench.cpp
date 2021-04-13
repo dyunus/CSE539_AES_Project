@@ -389,6 +389,135 @@ void tb::test_fieldmultiply2_timing(){
     std::cout <<"==========END FIELDMULTIPYBY2 TIMING TEST==========\n";
 }
 
+void tb:: test_addRounkey_state_timing_test(){
+	const unsigned int RUN_COUNT = 10000;
+
+        std::vector<double> avg_runtimes(5, 0.0);
+        std::vector<aes::state> states;
+        std::vector<int> shuffleVector = {0,1,2,3,4};
+        for(int i=0; i<5; i++){
+                auto temp = randgen<128>();
+                std::vector<aes::byte> arr;
+                for(size_t i =0; i<16; i++){
+                        arr.push_back(temp[i]);
+                }
+                aes:: state state = ciphermodes::convert_block_to_state(arr);
+                states.push_back(state);
+        }
+	auto temp =randgen<128>();
+	std::vector<aes::byte> arr;
+	for(size_t i=0; i<16; i++){
+		arr.push_back(temp[i]);
+	}
+	aes::state roundkey = ciphermodes::convert_block_to_state(arr);
+        std::random_device rd;
+        std::mt19937 g(rd());
+        for (std::size_t l = 0; l < RUN_COUNT; ++l) {
+                std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
+                for (const auto& i : shuffleVector) {
+                        auto add_start = std::chrono::steady_clock::now();
+                        aes::add_round_key(states[i],roundkey);
+                        auto add_end = std::chrono::steady_clock::now();
+                        auto add_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(add_end - add_start).count();
+                        avg_runtimes[i] = (avg_runtimes[i] * l + add_ns) / (l + 1);
+                }
+        }
+        std::cout <<"==========ADDROUNKEY STATE TIMING TEST==========\n";
+        for (size_t i = 0; i < states.size(); ++i) {
+                aes::__debug_print_state(states[i]);
+                std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
+        }
+        std::cout <<"==========END ADDROUNDKEY STATE TIMING TEST==========\n";
+}
+
+void tb:: test_addRounkey_roundkey_timing_test(){
+        const unsigned int RUN_COUNT = 10000;
+
+        std::vector<double> avg_runtimes(5, 0.0);
+        std::vector<aes::state> roundkeys;
+        std::vector<int> shuffleVector = {0,1,2,3,4};
+        for(int i=0; i<5; i++){
+                auto temp = randgen<128>();
+                std::vector<aes::byte> arr;
+                for(size_t i =0; i<16; i++){
+                        arr.push_back(temp[i]);
+                }
+                aes:: state roundkey = ciphermodes::convert_block_to_state(arr);
+                roundkeys.push_back(roundkey);
+        }
+        auto temp =randgen<128>();
+        std::vector<aes::byte> arr;
+        for(size_t i=0; i<16; i++){
+                arr.push_back(temp[i]);
+        }
+        aes::state state = ciphermodes::convert_block_to_state(arr);
+        std::random_device rd;
+        std::mt19937 g(rd());
+        for (std::size_t l = 0; l < RUN_COUNT; ++l) {
+                std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
+                for (const auto& i : shuffleVector) {
+                        auto add_start = std::chrono::steady_clock::now();
+                        aes::add_round_key(state,roundkeys[i]);
+                        auto add_end = std::chrono::steady_clock::now();
+                        auto add_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(add_end - add_start).count();
+                        avg_runtimes[i] = (avg_runtimes[i] * l + add_ns) / (l + 1);
+                }
+        }
+        std::cout <<"==========ADDROUNKEY ROUNDKEY TIMING TEST==========\n";
+        for (size_t i = 0; i < roundkeys.size(); ++i) {
+                aes::__debug_print_state(roundkeys[i]);
+                std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
+        }
+        std::cout <<"==========END ADDROUNDKEY ROUNDKEY TIMING TEST==========\n";
+}
+
+void tb:: test_addRounkey_timing_test(){
+        const unsigned int RUN_COUNT = 10000;
+
+        std::vector<double> avg_runtimes(5, 0.0);
+        std::vector<aes::state> states;
+        std::vector<int> shuffleVector = {0,1,2,3,4};
+        for(int i=0; i<5; i++){
+                auto temp = randgen<128>();
+                std::vector<aes::byte> arr;
+                for(size_t i =0; i<16; i++){
+                        arr.push_back(temp[i]);
+                }
+                aes:: state state = ciphermodes::convert_block_to_state(arr);
+                states.push_back(state);
+        }
+	std::vector<aes::state> roundkeys;
+	for( int i=0; i<5; i++){
+        	auto temp =randgen<128>();
+        	std::vector<aes::byte> arr;
+        	for(size_t i=0; i<16; i++){
+                	arr.push_back(temp[i]);
+        	}
+        	aes::state roundkey = ciphermodes::convert_block_to_state(arr);
+		roundkeys.push_back(roundkey);
+	}
+        std::random_device rd;
+        std::mt19937 g(rd());
+        for (std::size_t l = 0; l < RUN_COUNT; ++l) {
+                std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
+                for (const auto& i : shuffleVector) {
+                        auto add_start = std::chrono::steady_clock::now();
+                        aes::add_round_key(states[i],roundkeys[i]);
+                        auto add_end = std::chrono::steady_clock::now();
+                        auto add_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(add_end - add_start).count();
+                        avg_runtimes[i] = (avg_runtimes[i] * l + add_ns) / (l + 1);
+                }
+        }
+        std::cout <<"==========ADDROUNKEY TIMING TEST==========\n";
+        for (size_t i = 0; i < states.size(); ++i) {
+                aes::__debug_print_state(states[i]);
+		std::cout<<"\n";
+		aes::__debug_print_state(roundkeys[i]);
+                std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
+        }
+        std::cout <<"==========END ADDROUNDKEY TIMING TEST==========\n";
+}
+
 
 void tb::test_aes(){
 

@@ -63,6 +63,12 @@ namespace tb {
 
     void test_fieldmultiply2_timing();
 
+    void test_addRounkey_state_timing_test();
+
+    void test_addRounkey_roundkey_timing_test();
+
+    void test_addRounkey_timing_test();
+
     void test_aes();
     /**
      * @brief Function to call to test specific modules within the program
