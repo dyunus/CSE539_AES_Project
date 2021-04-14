@@ -70,7 +70,7 @@ auto main(int argc, const char *argv[]) -> int{
             // Print help information
             printf("%s\n", "Usage: aes_exec [OPTION]...");
             printf("%-40s %s\n", "-h, --help", "Display this help text");
-            printf("%-40s %s\n", "-g <argument>, --gen <argument>", "Generate random key of argument bit length");
+            printf("%-40s %s\n", "-g <argument>, --gen <argument>", "Generate random key of argument bit length and stores it in a file named genkey");
             printf("%-40s %s\n", "-e, --encrypt", "Encrypt a given input");
             printf("%-40s %s\n", "-d, --decrypt", "Decrypt a given input");
             printf("%-40s %s\n", "-m <ecb | cbc | ctr | cfb | ofm>", "Designate a mode of operation");
