@@ -91,6 +91,7 @@ namespace ciphermodes {
     auto OFM_Encrypt(const std::vector<aes::byte>& plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
     auto OFM_Decrypt(const std::vector<aes::byte>& ciphertext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
 
+    auto genKey(int keySize) -> std::vector<aes::byte>;
 } // end of namespace ciphermodes
 
 #endif

@@ -1,6 +1,18 @@
 #include "ciphermodes.hpp"
 #include "yandom.hpp"
 
+
+auto ciphermodes::genKey(int keySize) -> std::vector<aes::byte>{
+    int keySizeInBytes = keySize / 8;
+    auto key = randgen<256>();
+    std::vector<aes::byte> temp;
+    for(auto byte: key){
+        temp.push_back(byte);
+    }
+    std::vector<aes::byte> keyBytes = {temp.begin(), temp.begin() + keySizeInBytes}; 
+    return keyBytes;
+}
+
 void ciphermodes::print_blocks(std::vector<aes::byte> vec){
     for (std::size_t i = 0; i < vec.size(); ++i) {
         if (i % 16 == 0){

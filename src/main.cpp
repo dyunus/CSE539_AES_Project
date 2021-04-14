@@ -47,7 +47,6 @@ auto main(int argc, const char *argv[]) -> int{
 
     std::vector<aes::byte> input_bytes;
     std::vector<aes::byte> key_bytes;
-    std::vector<aes::byte> IV_Bytes;
     const char* message_file_name; //storing the file name when parsing args
     bool plaintext_provided = false;
     bool keyfile_provided = false;
@@ -71,12 +70,19 @@ auto main(int argc, const char *argv[]) -> int{
             // Print help information
             printf("%s\n", "Usage: aes_exec [OPTION]...");
             printf("%-40s %s\n", "-h, --help", "Display this help text");
+            printf("%-40s %s\n", "-g <argument>, --gen <argument>", "Generate random key of argument bit length");
             printf("%-40s %s\n", "-e, --encrypt", "Encrypt a given input");
             printf("%-40s %s\n", "-d, --decrypt", "Decrypt a given input");
             printf("%-40s %s\n", "-m <ecb | cbc | ctr | cfb | ofm>", "Designate a mode of operation");
             printf("%-40s %s\n", "-in <argument>", "Input filename");
             printf("%-40s %s\n", "-out <argument>", "Output filename");
             printf("%-40s %s\n", "-k <argument>", "Specify key for AES");
+            exit(0);
+        }
+
+        if(strncmp(argv[i], "-g", sizeof("-g")) == 0|| strcmp(argv[i], "--gen") == 0){
+            key_bytes = ciphermodes::genKey(atoi(argv[i+1]));
+            write_binary_file("genkey", key_bytes);
             exit(0);
         }
 
@@ -126,15 +132,20 @@ auto main(int argc, const char *argv[]) -> int{
             mode = DEBUG;
         }
     }
+    
+    if(!encrypt && !decrypt){
+        std::cerr << "ERROR: Specify encryption or decryption operations!\n";
+        exit(1); 
+    }
+
+    if(encrypt && decrypt){
+        std::cerr << "ERROR: Both encryption and decryption options were selected\n";
+        exit(1);   
+    }
 
     if(mode == -1){
         std::cerr << "Please designate a mode of operation! USAGE: -m <ecb | cbc | ctr | cfb | ofm>\n";
         exit(1);  
-    }
-    
-    if(encrypt && decrypt){
-        std::cerr << "ERROR: Both encryption and decryption options were selected\n";
-        exit(1);   
     }
 
     if(!keyfile_provided){
@@ -167,8 +178,7 @@ auto main(int argc, const char *argv[]) -> int{
     if(mode == CBC){
         if(encrypt){
             std::vector<aes::byte> ciphertext = ciphermodes::CBC_Encrypt(input_bytes, key_bytes);
-            std::vector <aes::byte> encrypted_message = ciphertext;
-            write_binary_file(message_file_name, encrypted_message);
+            write_binary_file(message_file_name, ciphertext);
         }
         else if(decrypt){
             std::vector<aes::byte> plaintext = ciphermodes::CBC_Decrypt(input_bytes, key_bytes);
