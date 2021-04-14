@@ -4,7 +4,7 @@ import time
 
 
 def padding_oracle():
-    p = pwn.process(["bin/aes_exec", "-in", "attempt","-k", "keyfile", "-m", "cbc","-out", "decrypted", "-d", "-iv", "IV"])
+    p = pwn.process(["bin/aes_exec", "-in", "attempt","-k", "keyfile", "-m", "cbc","-out", "decrypted", "-d"])
     prog_output = p.clean()
     p.kill()
     if os.path.exists("attempt"):
@@ -18,9 +18,6 @@ if os.path.exists("attempt"):
 
 if os.path.exists("ciphertext"):
     os.remove("ciphertext")
-
-if os.path.exists("IV"):
-    os.remove("IV")
 
 if os.path.exists("decrypted"):
     os.remove("decrypted")
