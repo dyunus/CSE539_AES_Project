@@ -152,6 +152,15 @@ auto ciphermodes::ECB_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std
     std::array<int, 2> nk_nr = aes::get_Nk_Nr(key_bytes.size()); 
     std::vector<aes::word> expandedKey(aes::NB*(nk_nr[1]+1));
     aes::key_expansion(key_bytes, expandedKey, nk_nr[0], nk_nr[1]);
+
+    /**
+     * In accordance with EXP63-CPP. Do not rely on the value of a moved-from object
+     * While move semantics are great for efficient usage of larger data structures,
+     * the incorrect use of move-semantics, that is using a moved object in the moved-from state,
+     * has undefined behavior. We made sure to only utilize move semantics in places where:
+     * 1) the data structure is sufficiently large to warrant for an efficiency gain
+     * 2) the data structure is never used afterwards where it was moved from 
+     **/
     std::vector<std::vector<aes::byte> > ciphertext_blocks =  ciphermodes::create_blocks(std::move(ciphertext_bytes));
     
     for (auto& block : ciphertext_blocks) {

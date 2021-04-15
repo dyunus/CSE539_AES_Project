@@ -9,6 +9,12 @@
 #include <cstring>
 
 auto read_binary_file(const char *file_name, std::vector<aes::byte> &vec){
+    /**
+     * In accordance with FIO42-C: Close files when they are no longer needed
+     * As C++ builds upon the C language through the introduction of RAII (Resource Acquisition Is Initialization),
+     * well-formed code should handle "acquiring resources in a constructor and [release] them in a destructor". ~ Bjarne Stroustrup, THE programmer
+     * ifstream releases the underlying file resources in its destructor, triggered when it goes out of scope.
+     */
     std::ifstream file(file_name, std::ios::in | std::ios::binary);
 
     if (!file.is_open()){
@@ -80,6 +86,14 @@ auto main(int argc, const char *argv[]) -> int{
             exit(0);
         }
 
+        /**
+         * In accordance with STR50-CPP. Guarantee that storage for strings has sufficient space 
+         * for character data and the null terminator.
+         * Especially important here, the use of strcmp is frowned upon due to its ability to be used for data leakage with arbitrary reads
+         * by ommitting the null-terminator from the argument. Rather, this program explicitly checks up until a maximum of the size of the
+         * expected argument.
+         *
+         **/
         if(strncmp(argv[i], "-g", sizeof("-g")) == 0|| strcmp(argv[i], "--gen") == 0){
             key_bytes = ciphermodes::genKey(atoi(argv[i+1]));
             write_binary_file("genkey", key_bytes);

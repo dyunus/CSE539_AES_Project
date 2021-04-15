@@ -18,6 +18,10 @@
  * @brief Used to prevent a cache-based side-channel attack that exploits the time-delta between CPU cache and main memory
  * Given an index, loads the entire lookup table into registers, selects the requested byte, and clears state
  * Discussed in Efficient Cache Attacks on AES, and Countermeasures by Eran Tromer, Dag Arne Osvik, and Adi Shamir
+ *
+ * Furthermore, this declaration is in accordance with EXP56-CPP: Do not call a language with a mismatched language linkage.
+ * In specifying that the linked function is in the "C" language, which is best practice for linking with x86 functions,
+ * this prevents linking the program to a non C/C++ function that could expose potential vulnerabilities and stack corruption. 
  */
 extern "C" uint8_t no_cache_lookup(uint8_t row, uint8_t col, const uint8_t* lookup_table); //  NOLINT(modernize-use-trailing-return-type)  Come on linter, this is C...
 

@@ -7,6 +7,9 @@
 #include "yandom.hpp"
 
 void tb::test_modules(uint64_t test_flags) {
+    /* In accordance with exp46-c: do not use a bitwise operator with a Boolean-like operand
+     * In order to avoid ambiguity, it is recommended to envelop the bitwise operation in parenthesis as seen below.
+     */
     if ((test_flags & TEST_NO_CACHE) != 0U) {
         __test_no_cache_lookup_timing();
     }
