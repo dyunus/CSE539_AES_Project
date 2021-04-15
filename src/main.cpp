@@ -261,8 +261,8 @@ auto main(int argc, const char *argv[]) -> int{
 
           tb::test_aes256_text_timing();
       }
-    } catch(const padding_error& pad_err) {
-        std::cerr << pad_err.what();
+    } catch(const aes_error& aes_err) {
+        std::cerr << aes_err.what();
         return EXIT_FAILURE;
     } catch (const std::ifstream::failure& e) {
         std::cerr << "Unable to open file for reading.\n"

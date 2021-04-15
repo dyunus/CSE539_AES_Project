@@ -12,9 +12,8 @@
 void cpuid(unsigned int info[4], int InfoType); // NOLINT(hicpp-avoid-c-arrays, cppcoreguidelines-avoid-c-arrays, modernize-avoid-c-arrays) Interacting with Kernel C, we don't have a say in this case
 #endif // CPUID
 
-
+#include "aes_exceptions.hpp"
 #include "aes.hpp"
-#include <cassert>
 #include <fstream>
 #include <immintrin.h>
 #include <iostream>
@@ -40,7 +39,9 @@ auto __rdseed_rand() -> std::array<aes::byte, RAND_LEN / 8> {
 
     for (int r = 0; r < keygen_rounds; ++r) {     
         unsigned long long key_portion{}; // NOLINT   Intel intrinsics require ULL, not uint64_t 
-        assert(_rdseed64_step(&key_portion)); // NOLINT Returns 0 on failure (sometimes it's too fast)
+        if (_rdseed64_step(&key_portion) == 0) {
+            throw aes_error("RDSEED failed to generate a new seed.\n");
+        }
 
         // Extract 8 bits from 64-bit random key-chunk
         auto* byte_ptr = reinterpret_cast<aes::byte*>(&key_portion);
@@ -96,8 +97,7 @@ auto __os_randgen() -> std::array<aes::byte, RAND_LEN / 8> {
     rand_file = std::ifstream("/dev/urandom", std::ios::in | std::ios::binary);
 
     if (!rand_file.is_open()) {
-        std::cerr << "non-hardware key-generation is not currently supported on this UNIX distribution.\n";
-        exit(1);
+        throw aes_error("non-hardware key-generation is not currently supported on this UNIX distribution.\n");
     }
 
     for (int i = 0; !rand_file.eof() && i < keygen_rounds; ++i) {
@@ -107,10 +107,7 @@ auto __os_randgen() -> std::array<aes::byte, RAND_LEN / 8> {
 
         // Check, in each loop, what the system entropy currently is as a means of detecting entropy attacks
         if (__get_available_entropy() < RAND_LEN / 8) {
-            std::cerr << "ERROR: "
-                << "System entropy has decreased to a dangerously low level (naturally or by DoS)\n"
-                << "Ending execution prematurely to uphold key-strength.";
-            exit(1);
+            throw aes_error("System entropy has decreased to a dangerously low level (naturally or by DoS)\nEnding execution prematurely to uplhold key-strength.\n");
         }
     }
 
@@ -138,7 +135,10 @@ auto randgen() -> std::array<aes::byte, RAND_LEN / 8> {
     // If RDSEED is supported on an AMD or Intel processor, EBX bit 18 will be set.
     key_bytes = ((cpu_info[1] & RDSEED_FLAG) != 0) ? __rdseed_rand<RAND_LEN>() : __os_randgen<RAND_LEN>();
 
-    assert(key_bytes.size() == RAND_LEN / sizeof(uint64_t)); // NOLINT
+    if (key_bytes.size() != RAND_LEN / sizeof(uint64_t)) {
+        throw aes_error("Randgen generated an incorrect-sized key.\n");
+    }
+
     return key_bytes;
 }
 

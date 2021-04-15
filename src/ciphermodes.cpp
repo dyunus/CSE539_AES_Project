@@ -36,7 +36,7 @@ void ciphermodes::unpad_ciphertext(std::vector<aes::byte>& ciphertext_bytes){
         for(aes::byte i = 0; i < padNum; i++){
             aes::byte check = ciphertext_bytes.back();
             if(check != padNum){
-                throw padding_error("Error While Unpadding!\n");
+                throw aes_error("Error While Unpadding!\n");
             }
             ciphertext_bytes.pop_back();
         }
@@ -190,7 +190,7 @@ auto ciphermodes::CTR_Encrypt(std::vector<aes::byte> plaintext_bytes, const std:
 	
 
 	if(plaintext_blocks.size() > 4294967296){
-		std::cerr << "Plaintext too large to securely encrypt with CTR.\n"; exit(1);
+		throw aes_error("Plaintext too large to securely encrypt with CTR.\n");
 	}
 
 	//counter starting at 0

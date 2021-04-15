@@ -244,7 +244,7 @@ auto aes::get_Nk_Nr(int keySize) -> std::array<int, 2> {
     nk_nr[0] = 8;
     nk_nr[1] = 14;
   } else {
-    throw aes_key_error("Invalid Key Length for AES!\n");
+    throw aes_error("Invalid Key Length for AES!\n");
   }
 
   return nk_nr;
