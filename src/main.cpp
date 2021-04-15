@@ -94,8 +94,8 @@ auto main(int argc, const char *argv[]) -> int{
          * expected argument.
          *
          **/
-        if(strncmp(argv[i], "-g", sizeof("-g")) == 0|| strcmp(argv[i], "--gen") == 0){
-            key_bytes = ciphermodes::genKey(atoi(argv[i+1]));
+        if(strncmp(argv[i], "-g", sizeof("-g")) == 0|| strncmp(argv[i], "--gen",sizeof("--gen")) == 0){
+            key_bytes = ciphermodes::genKey(std::stoi(argv[i+1]));
             write_binary_file("genkey", key_bytes);
             exit(0);
         }
@@ -117,11 +117,11 @@ auto main(int argc, const char *argv[]) -> int{
             keyfile_provided = true;
         }
 
-        else if(strncmp(argv[i], "-d", sizeof("-d")) == 0|| strcmp(argv[i], "--decrypt") == 0){
+        else if(strncmp(argv[i], "-d", sizeof("-d")) == 0|| strncmp(argv[i], "--decrypt",sizeof("--decrypt")) == 0){
             decrypt = true;
         }
 
-        else if(strncmp(argv[i], "-e", sizeof("-e")) == 0|| strcmp(argv[i], "--encrypt") == 0){
+        else if(strncmp(argv[i], "-e", sizeof("-e")) == 0|| strncmp(argv[i], "--encrypt",sizeof("--encrypt")) == 0){
             encrypt = true;
         }
 
