@@ -1,4 +1,5 @@
 #include "ciphermodes.hpp"
+#include "aes_exceptions.hpp"
 #include "yandom.hpp"
 
 
@@ -35,7 +36,7 @@ void ciphermodes::unpad_ciphertext(std::vector<aes::byte>& ciphertext_bytes){
         for(aes::byte i = 0; i < padNum; i++){
             aes::byte check = ciphertext_bytes.back();
             if(check != padNum){
-                std::cerr << "Error While Unpadding!\n"; exit(1);
+                throw padding_error("Error While Unpadding!\n");
             }
             ciphertext_bytes.pop_back();
         }

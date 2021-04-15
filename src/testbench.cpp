@@ -1,8 +1,10 @@
 #include "testbench.hpp"
+#include "aes_exceptions.hpp"
 #include <algorithm>
-#include <cassert>
 #include <chrono>
 #include <random>
+#include <sstream>
+#include <iostream>
 #include "ciphermodes.hpp"
 #include "yandom.hpp"
 
@@ -36,13 +38,14 @@ void tb::test_no_cache_lookup_timing() {
             auto ncache_end = std::chrono::steady_clock::now();
 
             if (val != val_other) {
-                std::cerr << "Val " << static_cast<int>(val) << " does not equal val_other " << static_cast<int>(val_other) 
-                << "for index " << static_cast<int>(i) << "\n";
-                exit(1);
-            } else {
-                auto ncache_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(ncache_end - ncache_start).count();
-                avg_runtimes[i] = (avg_runtimes[i] * l + ncache_ns) / static_cast<double>(l + 1);
+                std::stringstream ss;
+                ss << "Val " << static_cast<int>(val) << " does not equal val_other " << static_cast<int>(val_other)
+                  << "for index " << static_cast<int>(i) << "\n";
+                throw testbench_error(ss.str().c_str(), Tests::NO_CACHE);
             }
+
+            auto ncache_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(ncache_end - ncache_start).count();
+            avg_runtimes[i] = (avg_runtimes[i] * l + ncache_ns) / static_cast<double>(l + 1);
         }
     }
 
@@ -63,14 +66,15 @@ void tb::test_ofm_mode_accuracy(std::vector<aes::byte>& plaintext_bytes, const s
     std::cout << "OFM Ciphertext\n";
     print_vector<aes::byte>(ciphertext);
 
-    auto decrypted_plaintext_bytes = ciphermodes::OFM_Decrypt(ciphertext, key_bytes);
+    auto decrypted_bytes = ciphermodes::OFM_Decrypt(ciphertext, key_bytes);
 
     std::cout << "OFM Decrypted\n";
-    print_vector<aes::byte>(decrypted_plaintext_bytes);
+    print_vector<aes::byte>(decrypted_bytes);
 
-
-    for (std::size_t i = 0; i < decrypted_plaintext_bytes.size(); ++i) {
-        assert(plaintext_bytes[i] == decrypted_plaintext_bytes[i] && "Decryption does not match!"); // NOLINT assert is fine
+    for (std::size_t i = 0; i < decrypted_bytes.size(); ++i) {
+        if (plaintext_bytes[i] != decrypted_bytes[i]) {
+          throw testbench_error("Decryption does not match!", Tests::OFM);
+        }
     }
 
     std::cout <<"==========END OFM TEST==========\n";
@@ -94,7 +98,9 @@ void tb::test_ecb_mode(std::vector<aes::byte>& plaintext_bytes, const std::vecto
     print_vector<aes::byte>(decrypted_bytes);
 
     for (std::size_t i = 0; i < decrypted_bytes.size(); ++i) {
-        assert(plaintext_bytes[i] == decrypted_bytes[i] && "Decryption does not match!"); // NOLINT assert is fine
+        if (plaintext_bytes[i] != decrypted_bytes[i]) {
+          throw testbench_error("Decryption does not match!", Tests::ECB);
+        }
     }
     std::cout <<"==========END ECB TEST==========\n";
 }
@@ -118,8 +124,10 @@ void tb::test_ctr_mode(std::vector<aes::byte>& plaintext_bytes, const std::vecto
     print_vector<aes::byte>(decrypted_bytes);
 
      for (std::size_t i = 0; i < decrypted_bytes.size(); ++i) {
-        assert(plaintext_bytes[i] == decrypted_bytes[i] && "Decryption does not match!"); // NOLINT assert is fine
-    }
+        if (plaintext_bytes[i] != decrypted_bytes[i]) {
+          throw testbench_error("Decryption does not match!", Tests::CTR);
+        }
+     }
     std::cout <<"==========END CTR TEST==========\n";
 }
 
@@ -143,7 +151,9 @@ void tb::test_cbc_mode(std::vector<aes::byte>& plaintext_bytes, const std::vecto
     print_vector<aes::byte>(decrypted_bytes);
 
     for (std::size_t i = 0; i < decrypted_bytes.size(); ++i) {
-        assert(plaintext_bytes[i] == decrypted_bytes[i] && "Decryption does not match!"); // NOLINT assert is fine
+        if (plaintext_bytes[i] != decrypted_bytes[i]) {
+          throw testbench_error("Decryption does not match!", Tests::CBC);
+        }
     }
 
     std::cout <<"==========END CBC TEST==========\n";
@@ -165,7 +175,9 @@ void tb::test_cfb_mode(std::vector<aes::byte>& plaintext_bytes, const std::vecto
     print_vector<aes::byte>(decrypted_bytes);
 
     for (std::size_t i = 0; i < decrypted_bytes.size(); ++i) {
-        assert(plaintext_bytes[i] == decrypted_bytes[i] && "Decryption does not match!"); // NOLINT assert is fine
+      if (decrypted_bytes[i] != plaintext_bytes[i]) {
+        throw testbench_error("Error in decryption!\n", Tests::CFB);
+      }
     }
 
     std::cout <<"==========END CFB TEST==========\n";
@@ -193,8 +205,7 @@ void tb::test_key_expansion(const std::vector<aes::byte>& key_bytes){
     }
 
     else{
-        std::cerr << "Invalid Key Length for AES!\n";
-        exit(1);
+        throw testbench_error("Invalid Key Length for AES!\n", Tests::KEY_EXPANSION);
     }
     // create a vector to store expanded key
     std::vector<aes::word> expandedKey(aes::NB * (Nr + 1));
@@ -231,13 +242,13 @@ void tb::test_manual_sbox(){
             auto man_end = std::chrono::steady_clock::now();
 
             if (val != val_other) {
-                std::cerr << "Val " << static_cast<int>(val) << " does not equal val_other " << static_cast<int>(val_other)
+                std::stringstream ss;
+                ss << "Val " << static_cast<int>(val) << " does not equal val_other " << static_cast<int>(val_other)
                 << "for index " << static_cast<int>(i) << "\n";
-                exit(1);
-            } else {
-                auto man_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(man_end - man_start).count();
-                avg_runtimes[i] = (avg_runtimes[i] * l + man_ns) / static_cast<double>(l + 1);
+                throw testbench_error(ss.str().c_str(), Tests::MANUAL_SBOX);
             }
+            auto man_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(man_end - man_start).count();
+            avg_runtimes[i] = (avg_runtimes[i] * l + man_ns) / static_cast<double>(l + 1);
         }
     }
 

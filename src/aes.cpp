@@ -1,4 +1,5 @@
 #include "aes.hpp"
+#include "aes_exceptions.hpp"
 
 void aes::swap_bytes(state &state, const std::array<byte, 256> &sub_source) {
   for (std::size_t r = 0; r < NB; ++r) {
@@ -243,8 +244,7 @@ auto aes::get_Nk_Nr(int keySize) -> std::array<int, 2> {
     nk_nr[0] = 8;
     nk_nr[1] = 14;
   } else {
-    std::cerr << "Invalid Key Length for AES!\n";
-    exit(1);
+    throw aes_key_error("Invalid Key Length for AES!\n");
   }
 
   return nk_nr;
