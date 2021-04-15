@@ -36,11 +36,12 @@ namespace aes
 
     template<class TYPE1, class TYPE2>
 	    struct Tuple{
-            Tuple() = default;
-            Tuple(TYPE1 element1, TYPE2 element2) {
-                this->element1 = element1;
-                this->element2 = element2;
-            }
+        Tuple() : element1(), element2() {};
+
+        Tuple(TYPE1 element1, TYPE2 element2) {
+          this->element1 = element1;
+          this->element2 = element2;
+        }
 
 		    TYPE1 element1;
 		    TYPE2 element2;
@@ -187,7 +188,7 @@ namespace aes
 
     auto get_Nk_Nr(int keySize) -> std::array<int, 2>;
 
-    void key_expansion(std::vector<byte> keyBytes, std::vector<word>& w, int Nk, int Nr);
+    void key_expansion(std::vector<byte> keyBytes, std::vector<word>& w, unsigned int Nk, unsigned int Nr);
 
     /**
      * @brief Performs a substition of a word using the Sbox
@@ -203,11 +204,11 @@ namespace aes
      */
     auto rotword(word word) -> aes::word;
 
-    auto __spliceKey(int round, const std::vector<word>& key)-> aes::state;
+    auto __spliceKey(unsigned int round, const std::vector<word>& key)-> aes::state;
 
-    void encrypt(int Nr, state& state, const std::vector<word>& w);
+    void encrypt(unsigned int Nr, state& state, const std::vector<word>& w);
     
-    void decrypt(int Nr, state& state, const std::vector<word>& w);    
+    void decrypt(unsigned int Nr, state& state, const std::vector<word>& w);    
     
     /*
      *@brief Calculate the position of the most signicant (right-most) bit of the byte given

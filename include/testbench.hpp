@@ -87,6 +87,6 @@ namespace tb {
     * 
     * @param test_flags OR combination of TESTCASES you'd like to test
     */
-    void test_modules(unsigned long test_flags);
+    void test_modules(uint64_t test_flags);
 } // namespace tb
 #endif // TESTBENCH_HPP

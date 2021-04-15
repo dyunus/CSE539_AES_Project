@@ -31,7 +31,7 @@ no_cache_lookup:
 
     # Load entire lookup table into CPU
     movaps xmm0, [rdx]
-    movaps xmm1, [rdx + 0x10]    
+    movaps xmm1, [rdx + 0x10]
     movaps xmm2, [rdx + 0x20]
     movaps xmm3, [rdx + 0x30]
     movaps xmm4, [rdx + 0x40]
@@ -47,8 +47,8 @@ no_cache_lookup:
     movaps xmm14, [rdx + 0xe0]
     movaps xmm15, [rdx + 0xf0]
 
-    # Calculate which xmm register stores the data using the row provided   
-    lea r9, [rip + jmp_table] 
+    # Calculate which xmm register stores the data using the row provided
+    lea r9, [rip + jmp_table]
     mov rcx, 1   # We shift right four to get index and then left 3 to multiply by 8 for quadword offset, 4-3=1
     shr rdi, cl  # The high four-bits hold the register number
     add r9, rdi
@@ -94,7 +94,7 @@ use_xmm_0:
     movq   xmm0, rsi
     jmp launch_pad
 
-x0:    
+x0:
     pshufb xmm0, xmm15
     pextrb eax, xmm0, 0
     jmp zeroize

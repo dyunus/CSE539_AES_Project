@@ -16,7 +16,7 @@ auto ciphermodes::genKey(int keySize) -> std::vector<aes::byte>{
 void ciphermodes::print_blocks(std::vector<aes::byte> vec){
     for (std::size_t i = 0; i < vec.size(); ++i) {
         if (i % 16 == 0){
-            printf("\n");     
+          printf("\n");     
         }
         printf("0x%02x ", vec[i]);
     }
@@ -41,8 +41,8 @@ void ciphermodes::unpad_ciphertext(std::vector<aes::byte>& ciphertext_bytes){
         }
 }
 
-std::vector<aes::byte> ciphermodes::xor_blocks(std::vector<aes::byte> block1,std::vector<aes::byte> block2){
-    for(int i = 0; i < ((block1.size() < block2.size()) ? block1.size() : block2.size()); i++){
+auto ciphermodes::xor_blocks(std::vector<aes::byte> block1,std::vector<aes::byte> block2) -> std::vector<aes::byte> {
+    for(std::size_t i = 0; i < ((block1.size() < block2.size()) ? block1.size() : block2.size()); i++){
             block1[i] ^= block2[i];
     }
     return block1;
@@ -97,6 +97,9 @@ auto ciphermodes::convert_state_to_block(aes::state state) -> std::vector<aes::b
 auto ciphermodes::create_CTR(std::array<aes::byte,12> nonce, aes::word counter)->aes::state{
 	std::vector<aes::byte> block;
 	std::array<aes::byte,4> temp = aes::splitWord(counter);
+
+  block.reserve(sizeof(aes::byte) * 16);
+
 	for(auto byte: nonce){
 		block.push_back(byte);
 	}
@@ -110,7 +113,7 @@ auto ciphermodes::create_CTR(std::array<aes::byte,12> nonce, aes::word counter)-
 auto ciphermodes::create_nonce_blocks(std::vector<aes::byte> ciphertext_bytes)->aes::Tuple<std::array<aes::byte, 12>, std::vector<std::vector<aes::byte>>>{
 	aes:: Tuple<std::array<aes::byte, 12>, std::vector<std::vector<aes::byte>>> result;
 	for(std::size_t i=0; i<12; i++){
-		result.element1[i]= ciphertext_bytes[i];
+		result.element1.at(i) = ciphertext_bytes[i];
 	}
 	std::vector<aes::byte> new_block;
     	for(std::size_t i =12; i < ciphertext_bytes.size(); i++){
@@ -120,7 +123,7 @@ auto ciphermodes::create_nonce_blocks(std::vector<aes::byte> ciphertext_bytes)->
         	}
         	new_block.push_back(ciphertext_bytes[i]);
     	}
-	if(new_block.size()>0){
+	if(!new_block.empty()){
     		result.element2.push_back(new_block);
 	}
 	return result;
@@ -166,12 +169,12 @@ auto ciphermodes::CTR_Encrypt(std::vector<aes::byte> plaintext_bytes, const std:
 	std::array<int, 2> nk_nr = aes::get_Nk_Nr(key_bytes.size());
 	std::vector<aes::word> expandedKey(aes::NB*(nk_nr[1]+1));
 	aes::key_expansion(key_bytes, expandedKey, nk_nr[0], nk_nr[1]);
-	std::vector<std::vector<aes::byte>> plaintext_blocks = ciphermodes::create_blocks(plaintext_bytes);
+	std::vector<std::vector<aes::byte>> plaintext_blocks = ciphermodes::create_blocks(std::move(plaintext_bytes));
 	aes::word counter= 0U;
 	auto temp = randgen<128>();
-	std::array <aes::byte, 12> nonce;
+	std::array <aes::byte, 12> nonce{};
 	for(size_t i =0; i<12; i++){
-	       nonce[i]=temp[i];
+	       nonce.at(i) = temp.at(i);
 	}	       
 	for(auto& plain_block: plaintext_blocks){
 		aes::state CTR = create_CTR(nonce, counter);
@@ -188,7 +191,7 @@ auto ciphermodes::CTR_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std
 	std::array<int, 2> nk_nr = aes::get_Nk_Nr(key_bytes.size());
         std::vector<aes::word> expandedKey(aes::NB*(nk_nr[1]+1));
         aes::key_expansion(key_bytes, expandedKey, nk_nr[0], nk_nr[1]);
-	aes::Tuple<std::array<aes::byte, 12>, std::vector<std::vector<aes::byte>>> nonce_cipherblocks = create_nonce_blocks(ciphertext_bytes);
+	aes::Tuple<std::array<aes::byte, 12>, std::vector<std::vector<aes::byte>>> nonce_cipherblocks = create_nonce_blocks(std::move(ciphertext_bytes));
 	aes::word counter = 0U;
 	for(auto& cipher_block: nonce_cipherblocks.element2){
 		aes::state CTR = create_CTR(nonce_cipherblocks.element1, counter);
@@ -210,13 +213,14 @@ auto ciphermodes::CBC_Encrypt(std::vector<aes::byte> plaintext_bytes, const std:
     
     auto IV = randgen<128>();
     std::vector<aes::byte> temp;
+    temp.reserve(sizeof(aes::byte) * IV.size());
     for(auto byte: IV){
 	    temp.push_back(byte);
     }
     
     plaintext_blocks.insert(plaintext_blocks.begin(), temp);
 
-    for(int i = 1; i < plaintext_blocks.size(); i++){
+    for(std::size_t i = 1; i < plaintext_blocks.size(); i++){
         plaintext_blocks[i] = xor_blocks(plaintext_blocks[i],plaintext_blocks[i-1]);
         aes::state state = convert_block_to_state(plaintext_blocks[i]);
         aes::encrypt(nk_nr[1], state, expandedKey);
@@ -233,7 +237,7 @@ auto ciphermodes::CBC_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std
     aes::key_expansion(key_bytes, expandedKey, nk_nr[0], nk_nr[1]);
     std::vector<std::vector<aes::byte> > ciphertext_blocks =  ciphermodes::create_blocks(std::move(ciphertext_bytes));
     
-    for(int i =  ciphertext_blocks.size() - 1; i > 0; i--){
+    for(std::size_t i =  ciphertext_blocks.size() - 1; i > 0; i--){
         aes::state state = convert_block_to_state(ciphertext_blocks[i]);
         aes::decrypt(nk_nr[1], state, expandedKey);
         ciphertext_blocks[i] = convert_state_to_block(state);
@@ -253,16 +257,17 @@ auto ciphermodes::CFB_Encrypt(std::vector<aes::byte> plaintext_bytes, const std:
 
     auto IV = randgen<128>();
     std::vector<aes::byte> temp;
+   temp.reserve(sizeof(aes::byte) * IV.size());
     for(auto byte: IV){
 	    temp.push_back(byte);
     }
-    std::vector<std::vector<aes::byte> > plaintext_blocks = ciphermodes::create_blocks(plaintext_bytes);
-    for(size_t i=0; i< plaintext_blocks.size(); i++){
+    std::vector<std::vector<aes::byte> > plaintext_blocks = ciphermodes::create_blocks(std::move(plaintext_bytes));
+    for(auto& plaintext_block : plaintext_blocks) {
 	    aes::state state = convert_block_to_state(temp);
 	    aes::encrypt(nk_nr[1], state, expandedKey);
 	    temp = convert_state_to_block(state);
-	    temp = xor_blocks(plaintext_blocks[i], temp);
-	    plaintext_blocks[i] = temp;
+	    temp = xor_blocks(plaintext_block, temp);
+	    plaintext_block = temp;
     }
     std::vector<aes::byte> ciphertext_bytes = merge_IV_blocks<16>(IV, plaintext_blocks);
     return ciphertext_bytes;
@@ -272,7 +277,7 @@ auto ciphermodes::CFB_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std
     std::array<int, 2> nk_nr = aes::get_Nk_Nr(key_bytes.size());
     std::vector<aes::word> expandedKey(aes::NB*(nk_nr[1]+1));
     aes::key_expansion(key_bytes, expandedKey, nk_nr[0], nk_nr[1]);
-    std::vector<std::vector<aes::byte> > ciphertext_blocks =  create_blocks(ciphertext_bytes);
+    std::vector<std::vector<aes::byte> > ciphertext_blocks =  create_blocks(std::move(ciphertext_bytes));
     std::vector<std::vector<aes::byte> > plaintext_blocks;
     for(size_t i=1; i < ciphertext_blocks.size(); i++){
 	    aes::state state = convert_block_to_state(ciphertext_blocks[i-1]);

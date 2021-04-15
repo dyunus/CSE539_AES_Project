@@ -42,7 +42,7 @@ namespace ciphermodes {
         aes::state state{};
         for(std::size_t j = 0; j < aes::NB; j++) {
             for(std::size_t i = 0; i < aes::NB; i++){
-                state[i][j] = block[index++];
+                state[i][j] = block.at(index++);
             }
         }
         return state;
@@ -51,12 +51,14 @@ namespace ciphermodes {
     auto convert_state_to_block(aes::state state) -> std::vector<aes::byte>;
 
     template <int SIZE>
-	auto merge_IV_blocks(std::array<aes::byte,SIZE> IV, std::vector<std::vector<aes::byte>> ciphertext_blocks) -> std::vector<aes::byte>{
+	auto merge_IV_blocks(const std::array<aes::byte,SIZE>& IV, const std::vector<std::vector<aes::byte>>& ciphertext_blocks) -> std::vector<aes::byte>{
         	std:: vector<aes::byte> ciphertext_bytes;
+          std::size_t merge_size = sizeof(aes::byte) * (IV.size() + (ciphertext_blocks.size() * ciphertext_blocks[0].size()));
+          ciphertext_bytes.reserve(merge_size);
         	for(auto byte : IV){
                 	ciphertext_bytes.push_back(byte);
         	}
-        	for(auto block: ciphertext_blocks){
+        	for(const auto& block: ciphertext_blocks){
                 	for(auto byte : block){
                         	ciphertext_bytes.push_back(byte);
                 	}

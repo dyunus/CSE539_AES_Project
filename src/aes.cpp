@@ -186,8 +186,7 @@ auto aes::splitWord(word word) -> std::array<byte, 4> {
 }
 
 auto aes::buildWord(byte b1, byte b2, byte b3, byte b4) -> aes::word {
-  return (b1 << 24U) | (b2 << 16U) | (b3 << 8U) |
-         (b4); // NOLINT(hicpp-signed-bitwise) : This is using proper unsigned
+  return (b1 << 24U) | (b2 << 16U) | (b3 << 8U) | (b4); // NOLINT(hicpp-signed-bitwise) : This is using proper unsigned
                // conventions, but is too complicated for the linter
 }
 
@@ -229,9 +228,9 @@ auto aes::get_Nk_Nr(int keySize) -> std::array<int, 2> {
 }
 
 void aes::key_expansion(std::vector<byte> keyBytes, std::vector<word> &w,
-                        int Nk, int Nr) {
+                        unsigned int Nk, unsigned int Nr) {
   word temp = -1;
-  int i = 0;
+  unsigned int i = 0;
 
   while (i < Nk) {
     w[i] = aes::buildWord(keyBytes[4 * i], keyBytes[4 * i + 1],
@@ -253,7 +252,7 @@ void aes::key_expansion(std::vector<byte> keyBytes, std::vector<word> &w,
   }
 }
 
-auto aes::__spliceKey(int round, const std::vector<word> &key) -> aes::state {
+auto aes::__spliceKey(unsigned int round, const std::vector<word> &key) -> aes::state {
   state roundKey;
   for (std::size_t i = 0; i < 4; i++) {
     word temp = key[4 * round + i];
@@ -269,7 +268,7 @@ auto aes::__spliceKey(int round, const std::vector<word> &key) -> aes::state {
   return roundKey;
 }
 
-void aes::encrypt(int Nr, state &state, const std::vector<word> &w) {
+void aes::encrypt(unsigned int Nr, state &state, const std::vector<word> &w) {
   aes::state roundKey = __spliceKey(0, w);
   add_round_key(state, roundKey);
   for (std::size_t i = 1; i < Nr; i++) {
@@ -285,7 +284,7 @@ void aes::encrypt(int Nr, state &state, const std::vector<word> &w) {
   add_round_key(state, roundKey);
 }
 
-void aes::decrypt(int Nr, state &state, const std::vector<word> &w) {
+void aes::decrypt(unsigned int Nr, state &state, const std::vector<word> &w) {
   aes::state roundKey = __spliceKey(Nr, w);
   add_round_key(state, roundKey);
   inv_shift_rows(state);
