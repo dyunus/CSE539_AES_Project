@@ -104,7 +104,7 @@ namespace aes
      * @param state: Reference to AES state being operated upon
      * @param sub_source: Constant reference to source array to use for substitutions
      */
-    void __swap_bytes(state &state, const std::array<byte, 256> &sub_source);
+    void swap_bytes(state &state, const std::array<byte, 256> &sub_source);
 
     /**
      * @brief Performs a non-linear byte substitution upon each byte within the state using the S-box
@@ -129,7 +129,7 @@ namespace aes
      */    
 
 
-    auto __field_multiply_by_2(byte s) -> byte;
+    auto field_multiply_by_2(byte s) -> byte;
 
     /**
      * @brief Performs multiplication between two elements in the finite field of polynomials modulo x^8+x^4+x^3+x+1
@@ -138,7 +138,7 @@ namespace aes
      * @param num : another byte tat represents a polynomial in the finite field
      * @return byte 
      */
-    auto __field_multiply(byte s, uint8_t num) -> byte;
+    auto field_multiply(byte s, uint8_t num) -> byte;
 
     /**
      * @brief 
@@ -208,7 +208,7 @@ namespace aes
      */
     auto rotword(word word) -> aes::word;
 
-    auto __spliceKey(unsigned int round, const std::vector<word>& key)-> aes::state;
+    auto spliceKey(unsigned int round, const std::vector<word>& key)-> aes::state;
 
     void encrypt(unsigned int Nr, state& state, const std::vector<word>& w);
     
@@ -220,16 +220,8 @@ namespace aes
      *@param s: byte being operated upon
      *@return uint8_t: unsigned integer with the position of the most significant bit
      */
-    auto __get_most_sig_bit(byte s) -> uint8_t;
+    auto get_most_sig_bit(byte s) -> uint8_t;
 
-    /*
-     *@brief Implementation of the Euclidean algorithm which finds the greatest common divisor of two elements. Used for debugging purposes
-     *
-     *@param left: One of the bytes whose greatest common divisor will be found. NOTE, left must be greater than right
-     *@param right: One of the bytes whose greatest common divisor will be found. NOTE, right must be less than left
-     *@param sigbit: Unsigned integer that represents the most significant bit location of left.
-     */
-    void __euclidean_algorithm(byte left, byte right, uint8_t sigbit);
 
     /*
      *@brief Retrieves the inverse modulo x^8+x^4+x^3+x+1 of the given polynomial
@@ -237,17 +229,17 @@ namespace aes
      *@param s: byte that represents an element in the finite field modulo x^8+x^4+x^3+x+1
      *@return byte: the inverse polynomial of the given polynomial given in byte form
      */
-    auto __get_inverse(byte s) -> byte;
+    auto get_inverse(byte s) -> byte;
 
     /*
-     * @brief Implementation of the Extended Euclidean algorithm which finds r,s such that r(left)+s(right)=gcd(left,right) where gcd is the greatest common divisor
+     * @brief Implementation of the Extended Euclidean algorithm which finds r,t such that r(left)+t(right)=gcd(left,right) where gcd is the greatest common divisor
      *
      * @param left: One of the bytes whose greatest common divisor will be found. NOTE, left must be greater than right
      * @param right: One of the bytes whose greatest common divisor will be found. NOTE, right must be less than right
      * @param sigbit: Unsigned integer that represents the most significant bit location of left.
-     * @return array<byte,2>: Array that contains the value of r in index 0 and the value of s in index 1
+     * @return array<byte,2>: Array that contains the value of r in index 0 and the value of t in index 1
      */
-    auto __extended_euclidean_algorithm(byte left, byte right, uint8_t sigbit) -> std::array<byte, 2>;
+    auto extended_euclidean_algorithm(byte left, byte right, uint8_t sigbit) -> std::array<byte, 2>;
 
     /*
      * @brief Calculates the S-Box value of the given byte
@@ -255,7 +247,7 @@ namespace aes
      * @param s: Byte whose S-Box value we want to find
      * @return byte: The S-Box value associated with the given byte
      */
-    auto __get_S_BOX_value(byte s) -> byte;
+    auto get_S_BOX_value(byte s) -> byte;
 
     /*
      * @brief Calculates the inverse S-Box value of the given byte
@@ -263,14 +255,14 @@ namespace aes
      * @param s: Byte whose inverse S-Box value we want to find
      * @return byte: The inverse S-Box value associated with the given byte
      */
-    auto __get_inverse_S_BOX_value(byte s) -> byte;
+    auto get_inverse_S_BOX_value(byte s) -> byte;
 
     /**
      * @brief Used to print the current contents of the state, for debugging purposes
      * 
      * @param state: Constant reference to AES state to be printed
      */
-    void __debug_print_state(const state &state);
+    void debug_print_state(const state &state);
 
 } // end of namespace aes
 

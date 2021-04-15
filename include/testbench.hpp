@@ -21,7 +21,7 @@ namespace tb {
      * @param vec: Vector to print
      */
     template<typename T>
-    void __print_vector(std::vector<T> vec) {
+    void print_vector(std::vector<T> vec) {
         for (std::size_t i = 0; i < vec.size(); ++i) {
             if (i % 16 == 0){
                 printf("\n");     
@@ -35,7 +35,7 @@ namespace tb {
      * @brief Used to test the average runtime of no_cache_lookup as a means of ensuring constant time execution
     * 
     */
-    void __test_no_cache_lookup_timing();
+    void test_no_cache_lookup_timing();
 
     /**
      * @brief Used to test the encryption, decryption process of OFM to ensure equality

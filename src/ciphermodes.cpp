@@ -98,7 +98,7 @@ auto ciphermodes::create_CTR(std::array<aes::byte,12> nonce, aes::word counter)-
 	std::vector<aes::byte> block;
 	std::array<aes::byte,4> temp = aes::splitWord(counter);
 
-  block.reserve(sizeof(aes::byte) * 16);
+	block.reserve(sizeof(aes::byte) * 16);
 
 	for(auto byte: nonce){
 		block.push_back(byte);
@@ -111,10 +111,15 @@ auto ciphermodes::create_CTR(std::array<aes::byte,12> nonce, aes::word counter)-
 }
 
 auto ciphermodes::create_nonce_blocks(std::vector<aes::byte> ciphertext_bytes)->aes::Tuple<std::array<aes::byte, 12>, std::vector<std::vector<aes::byte>>>{
+	
 	aes:: Tuple<std::array<aes::byte, 12>, std::vector<std::vector<aes::byte>>> result;
+	
+	//gets the 12 bytes of the CTR IV from the first 12 bytes of the ciphertext
 	for(std::size_t i=0; i<12; i++){
 		result.element1.at(i) = ciphertext_bytes[i];
 	}
+
+	//creates the blocks that will be decrypted from the remaining bytes in the ciphertext
 	std::vector<aes::byte> new_block;
     	for(std::size_t i =12; i < ciphertext_bytes.size(); i++){
         	if((i-12) != 0 && (i-12) % 16 == 0){
@@ -176,15 +181,27 @@ auto ciphermodes::ECB_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std
 
 auto ciphermodes::CTR_Encrypt(std::vector<aes::byte> plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>{
 	std::array<int, 2> nk_nr = aes::get_Nk_Nr(key_bytes.size());
+	
+	//Key Expansion
 	std::vector<aes::word> expandedKey(aes::NB*(nk_nr[1]+1));
 	aes::key_expansion(key_bytes, expandedKey, nk_nr[0], nk_nr[1]);
 	std::vector<std::vector<aes::byte>> plaintext_blocks = ciphermodes::create_blocks(std::move(plaintext_bytes));
+	
+
+	if(plaintext_blocks.size() > 4294967296){
+		std::cerr << "Plaintext too large to securely encrypt with CTR.\n"; exit(1);
+	}
+
+	//counter starting at 0
 	aes::word counter= 0U;
+
+	//Create the 96 bit nonce for CTR mode
 	auto temp = randgen<128>();
 	std::array <aes::byte, 12> nonce{};
 	for(size_t i =0; i<12; i++){
 	       nonce.at(i) = temp.at(i);
-	}	       
+	}
+
 	for(auto& plain_block: plaintext_blocks){
 		aes::state CTR = create_CTR(nonce, counter);
 		aes::encrypt(nk_nr[1], CTR, expandedKey);
@@ -198,7 +215,9 @@ auto ciphermodes::CTR_Encrypt(std::vector<aes::byte> plaintext_bytes, const std:
 
 auto ciphermodes::CTR_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>{
 	std::array<int, 2> nk_nr = aes::get_Nk_Nr(key_bytes.size());
-        std::vector<aes::word> expandedKey(aes::NB*(nk_nr[1]+1));
+        
+	//Key Expansion
+	std::vector<aes::word> expandedKey(aes::NB*(nk_nr[1]+1));
         aes::key_expansion(key_bytes, expandedKey, nk_nr[0], nk_nr[1]);
 	aes::Tuple<std::array<aes::byte, 12>, std::vector<std::vector<aes::byte>>> nonce_cipherblocks = create_nonce_blocks(std::move(ciphertext_bytes));
 	aes::word counter = 0U;
@@ -261,15 +280,19 @@ auto ciphermodes::CBC_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std
 
 auto ciphermodes::CFB_Encrypt(std::vector<aes::byte> plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>{
     std::array<int, 2> nk_nr = aes::get_Nk_Nr(key_bytes.size());
+    
+    //key expansion
     std::vector<aes::word> expandedKey(aes::NB*(nk_nr[1]+1));
     aes::key_expansion(key_bytes, expandedKey, nk_nr[0], nk_nr[1]);
 
+    //get random IV
     auto IV = randgen<128>();
     std::vector<aes::byte> temp;
-   temp.reserve(sizeof(aes::byte) * IV.size());
+    temp.reserve(sizeof(aes::byte) * IV.size());
     for(auto byte: IV){
 	    temp.push_back(byte);
     }
+    
     std::vector<std::vector<aes::byte> > plaintext_blocks = ciphermodes::create_blocks(std::move(plaintext_bytes));
     for(auto& plaintext_block : plaintext_blocks) {
 	    aes::state state = convert_block_to_state(temp);

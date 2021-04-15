@@ -11,10 +11,10 @@ void tb::test_modules(uint64_t test_flags) {
      * In order to avoid ambiguity, it is recommended to envelop the bitwise operation in parenthesis as seen below.
      */
     if ((test_flags & TEST_NO_CACHE) != 0U) {
-        __test_no_cache_lookup_timing();
+        test_no_cache_lookup_timing();
     }
 }
-void tb::__test_no_cache_lookup_timing() {
+void tb::test_no_cache_lookup_timing() {
     const unsigned int RUN_COUNT = 1000;
 
     // Set up vectors to track runtime information
@@ -57,16 +57,16 @@ void tb::test_ofm_mode_accuracy(std::vector<aes::byte>& plaintext_bytes, const s
     std::cout <<"==========OFM TEST==========\n";
 
     std::cout << "Plaintext\n";
-    __print_vector<aes::byte>(plaintext_bytes);
+    print_vector<aes::byte>(plaintext_bytes);
 
     std::vector<aes::byte> ciphertext = ciphermodes::OFM_Encrypt(plaintext_bytes, key_bytes);
     std::cout << "OFM Ciphertext\n";
-    __print_vector<aes::byte>(ciphertext);
+    print_vector<aes::byte>(ciphertext);
 
     auto decrypted_plaintext_bytes = ciphermodes::OFM_Decrypt(ciphertext, key_bytes);
 
     std::cout << "OFM Decrypted\n";
-    __print_vector<aes::byte>(decrypted_plaintext_bytes);
+    print_vector<aes::byte>(decrypted_plaintext_bytes);
 
 
     for (std::size_t i = 0; i < decrypted_plaintext_bytes.size(); ++i) {
@@ -81,17 +81,17 @@ void tb::test_ecb_mode(std::vector<aes::byte>& plaintext_bytes, const std::vecto
     std::cout <<"==========ECB TEST==========\n";
 
     std::cout << "Plaintext\n";
-    __print_vector<aes::byte>(plaintext_bytes);
+    print_vector<aes::byte>(plaintext_bytes);
 
     std::vector<aes::byte> ciphertext_bytes = ciphermodes::ECB_Encrypt(plaintext_bytes, key_bytes);
 
     std::cout << "\nECB Ciphertext:\n";
-    __print_vector<aes::byte>(ciphertext_bytes);
+    print_vector<aes::byte>(ciphertext_bytes);
 
     std::vector<aes::byte> decrypted_bytes = ciphermodes::ECB_Decrypt(ciphertext_bytes, key_bytes);
 
     std::cout << "\nECB Decrypted:\n";
-    __print_vector<aes::byte>(decrypted_bytes);
+    print_vector<aes::byte>(decrypted_bytes);
 
     for (std::size_t i = 0; i < decrypted_bytes.size(); ++i) {
         assert(plaintext_bytes[i] == decrypted_bytes[i] && "Decryption does not match!"); // NOLINT assert is fine
@@ -105,17 +105,17 @@ void tb::test_ctr_mode(std::vector<aes::byte>& plaintext_bytes, const std::vecto
     std::cout <<"==========CTR TEST==========\n";
 
     std::cout << "Plaintext\n";
-    __print_vector<aes::byte>(plaintext_bytes);
+    print_vector<aes::byte>(plaintext_bytes);
 
     std::vector<aes::byte> ciphertext_bytes = ciphermodes::CTR_Encrypt(plaintext_bytes, key_bytes);
 
     std::cout << "\nCTR Ciphertext:\n";
-    __print_vector<aes::byte>(ciphertext_bytes);
+    print_vector<aes::byte>(ciphertext_bytes);
 
     std::vector<aes::byte> decrypted_bytes = ciphermodes::CTR_Decrypt(ciphertext_bytes, key_bytes);
 
     std::cout << "\nCTR Decrypted:\n";
-    __print_vector<aes::byte>(decrypted_bytes);
+    print_vector<aes::byte>(decrypted_bytes);
 
      for (std::size_t i = 0; i < decrypted_bytes.size(); ++i) {
         assert(plaintext_bytes[i] == decrypted_bytes[i] && "Decryption does not match!"); // NOLINT assert is fine
@@ -130,17 +130,17 @@ void tb::test_cbc_mode(std::vector<aes::byte>& plaintext_bytes, const std::vecto
     std::cout <<"==========CBC TEST==========\n";
 
     std::cout << "Plaintext\n";
-    __print_vector<aes::byte>(plaintext_bytes);
+    print_vector<aes::byte>(plaintext_bytes);
 
     std::vector<aes::byte> ciphertext_bytes = ciphermodes::CBC_Encrypt(plaintext_bytes, key_bytes);
 
     std::cout << "\nCBC Ciphertext:\n";
-    __print_vector<aes::byte>(ciphertext_bytes);
+    print_vector<aes::byte>(ciphertext_bytes);
 
     std::vector<aes::byte> decrypted_bytes = ciphermodes::CBC_Decrypt(ciphertext_bytes, key_bytes);
 
     std::cout << "\nCBC Decrypted:\n";
-    __print_vector<aes::byte>(decrypted_bytes);
+    print_vector<aes::byte>(decrypted_bytes);
 
     for (std::size_t i = 0; i < decrypted_bytes.size(); ++i) {
         assert(plaintext_bytes[i] == decrypted_bytes[i] && "Decryption does not match!"); // NOLINT assert is fine
@@ -157,12 +157,12 @@ void tb::test_cfb_mode(std::vector<aes::byte>& plaintext_bytes, const std::vecto
     std::vector<aes::byte> ciphertext_bytes = ciphermodes::CFB_Encrypt(plaintext_bytes, key_bytes);
 
     std::cout << "\nCFB Ciphertext:\n";
-    __print_vector<aes::byte>(ciphertext_bytes);
+    print_vector<aes::byte>(ciphertext_bytes);
 
     std::vector<aes::byte> decrypted_bytes = ciphermodes::CFB_Decrypt(ciphertext_bytes, key_bytes);
 
     std::cout << "\nCFB Decrypted:\n";
-    __print_vector<aes::byte>(decrypted_bytes);
+    print_vector<aes::byte>(decrypted_bytes);
 
     for (std::size_t i = 0; i < decrypted_bytes.size(); ++i) {
         assert(plaintext_bytes[i] == decrypted_bytes[i] && "Decryption does not match!"); // NOLINT assert is fine
@@ -227,7 +227,7 @@ void tb::test_manual_sbox(){
         for (const auto& i : lookup_values) {
             aes::byte val = aes::S_BOX.at(i);
             auto man_start = std::chrono::steady_clock::now();
-            aes::byte val_other = aes::__get_S_BOX_value(i);
+            aes::byte val_other = aes::get_S_BOX_value(i);
             auto man_end = std::chrono::steady_clock::now();
 
             if (val != val_other) {
@@ -278,7 +278,7 @@ void tb:: test_shiftRow_timing(){
 	}
 	std::cout <<"==========SHIFTROW TIMING TEST==========\n";
     	for (std::size_t i = 0; i < 5; ++i) {
-		aes::__debug_print_state(states[i]);
+		aes::debug_print_state(states[i]);
         	std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
     	}
     	std::cout <<"==========END SHIFTROW TIMING TEST==========\n";
@@ -314,7 +314,7 @@ void tb:: test_mixColumns_timing(){
         }
         std::cout <<"==========MIXCOLUMNS TIMING TEST==========\n";
         for (std::size_t i = 0; i < 5; ++i) {
-                aes::__debug_print_state(states[i]);
+                aes::debug_print_state(states[i]);
                 std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
         }
         std::cout <<"==========END MIXCOLUMNS TIMING TEST==========\n";
@@ -350,7 +350,7 @@ void tb:: test_subBytes_timing(){
         }
         std::cout <<"==========SUBBYTES TIMING TEST==========\n";
         for (std::size_t i = 0; i < 5; ++i) {
-                aes::__debug_print_state(states[i]);
+                aes::debug_print_state(states[i]);
                 std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
         }
         std::cout <<"==========END SUBBYTES TIMING TEST==========\n";
@@ -373,6 +373,7 @@ void tb::test_fieldmultiply2_timing(){
 
         for (const auto& i : lookup_values) {
             auto mult_start = std::chrono::steady_clock::now();
+	    aes::field_multiply_by_2(i);
             auto mult_end = std::chrono::steady_clock::now();
             auto mult_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(mult_end - mult_start).count();
             avg_runtimes[i] = (avg_runtimes[i] * l + mult_ns) / static_cast<double>(l + 1);
@@ -421,7 +422,7 @@ void tb:: test_addRounkey_state_timing(){
         }
         std::cout <<"==========ADDROUNKEY STATE TIMING TEST==========\n";
         for (size_t i = 0; i < states.size(); ++i) {
-                aes::__debug_print_state(states[i]);
+                aes::debug_print_state(states[i]);
                 std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
         }
         std::cout <<"==========END ADDROUNDKEY STATE TIMING TEST==========\n";
@@ -462,7 +463,7 @@ void tb:: test_addRounkey_roundkey_timing(){
         }
         std::cout <<"==========ADDROUNKEY ROUNDKEY TIMING TEST==========\n";
         for (size_t i = 0; i < roundkeys.size(); ++i) {
-                aes::__debug_print_state(roundkeys[i]);
+                aes::debug_print_state(roundkeys[i]);
                 std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
         }
         std::cout <<"==========END ADDROUNDKEY ROUNDKEY TIMING TEST==========\n";
@@ -507,9 +508,9 @@ void tb:: test_addRounkey_timing(){
         }
         std::cout <<"==========ADDROUNKEY TIMING TEST==========\n";
         for (size_t i = 0; i < states.size(); ++i) {
-                aes::__debug_print_state(states[i]);
+                aes::debug_print_state(states[i]);
 		std::cout<<"\n";
-		aes::__debug_print_state(roundkeys[i]);
+		aes::debug_print_state(roundkeys[i]);
                 std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
         }
         std::cout <<"==========END ADDROUNDKEY TIMING TEST==========\n";
@@ -687,7 +688,7 @@ void tb::test_aes128_text_timing(){
         }
 	printf("\n");
 	for (std::size_t i = 0; i < 5; ++i) {
-                aes::__debug_print_state(texts[i]);
+                aes::debug_print_state(texts[i]);
                 std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
         }
         std::cout <<"==========END AES128 TEXT TIMING TEST==========\n";
@@ -738,7 +739,7 @@ void tb::test_aes192_text_timing(){
         }
 	printf("\n");
         for (std::size_t i = 0; i < 5; ++i) {
-                aes::__debug_print_state(texts[i]);
+                aes::debug_print_state(texts[i]);
                 std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
         }
         std::cout <<"==========END AES192 TEXT TIMING TEST==========\n";
@@ -789,7 +790,7 @@ void tb::test_aes256_text_timing(){
         }
 	printf("\n");
         for (std::size_t i = 0; i < 5; ++i) {
-                aes::__debug_print_state(texts[i]);
+                aes::debug_print_state(texts[i]);
                 std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
         }
         std::cout <<"==========END AES256 TEXT TIMING TEST==========\n";
@@ -818,11 +819,11 @@ void tb::test_aes(){
     std::cout << "Testing sub bytes:\n";
 
     // Sub bytes test (using state from NIST)
-    aes::__debug_print_state(state);
+    aes::debug_print_state(state);
     aes::sub_bytes(state);
-    aes::__debug_print_state(state);
+    aes::debug_print_state(state);
     aes::inv_sub_bytes(state);
-    aes::__debug_print_state(state);
+    aes::debug_print_state(state);
 
     std::cout << "Testing Shift Rows:\n";
 
@@ -831,11 +832,11 @@ void tb::test_aes(){
                           {0x27, 0xbf, 0xb4, 0x41},
                           {0x11, 0x98, 0x5d, 0x52},
                           {0xae, 0xf1, 0xe5, 0x30}}};
-    aes::__debug_print_state(state3);
+    aes::debug_print_state(state3);
     aes::shift_rows(state3);
-    aes::__debug_print_state(state3);
+    aes::debug_print_state(state3);
     aes::inv_shift_rows(state3);
-    aes::__debug_print_state(state3);
+    aes::debug_print_state(state3);
 
     std::cout << "Testing Mix Columns:\n";
 
@@ -843,11 +844,11 @@ void tb::test_aes(){
                           {0xbf, 0xb4, 0x41, 0x27},
                           {0x5d, 0x52, 0x11, 0x98},
                           {0x30, 0xae, 0xf1, 0xe5}}};
-    aes::__debug_print_state(state2);
+    aes::debug_print_state(state2);
     aes::mix_columns(state2);
-    aes::__debug_print_state(state2);
+    aes::debug_print_state(state2);
     aes::inv_mix_columns(state2);
-    aes::__debug_print_state(state2);
+    aes::debug_print_state(state2);
 
     std::cout << "Testing Add Round Key:\n";
     aes::state state4 = {{{0x04, 0xe0, 0x48, 0x28},
@@ -864,16 +865,16 @@ void tb::test_aes(){
                                  {0xfe, 0x2c, 0x39, 0x76},
                                  {0x17, 0xb1, 0x39, 0x05}}};
 
-    aes::__debug_print_state(state4);
+    aes::debug_print_state(state4);
     aes::add_round_key(state4, roundKeyValue);
-    aes::__debug_print_state(state4);
+    aes::debug_print_state(state4);
     aes::add_round_key(state4, roundKeyValue);
-    aes::__debug_print_state(state4);
+    aes::debug_print_state(state4);
 
     aes::byte b = 0U;
     for (std::size_t i = 0; i < 256; i++)
     {
-        aes::byte sbox = aes::__get_S_BOX_value(b);
+        aes::byte sbox = aes::get_S_BOX_value(b);
         printf("0x%02x  ", sbox);
         if (i % 16 == 15) {
             printf("\n");
@@ -884,7 +885,7 @@ void tb::test_aes(){
     b = 0U;
     for (std::size_t i = 0; i < 256; i++)
     {
-        aes::byte sbox = aes::__get_inverse_S_BOX_value(b);
+        aes::byte sbox = aes::get_inverse_S_BOX_value(b);
         printf("0x%02x  ", sbox);
         if (i % 16 == 15) {
             printf("\n");

@@ -147,10 +147,10 @@ auto main(int argc, const char *argv[]) -> int{
         }
     }
     
-    if(!encrypt && !decrypt){
+   /* if(!encrypt && !decrypt){
         std::cerr << "ERROR: Specify encryption or decryption operations!\n";
         exit(1); 
-    }
+    }*/
 
     if(encrypt && decrypt){
         std::cerr << "ERROR: Both encryption and decryption options were selected\n";
