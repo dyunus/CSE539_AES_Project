@@ -15,6 +15,7 @@ auto read_binary_file(const char *file_name, std::vector<aes::byte> &vec){
      * well-formed code should handle "acquiring resources in a constructor and [release] them in a destructor". ~ Bjarne Stroustrup, THE programmer
      * ifstream releases the underlying file resources in its destructor, triggered when it goes out of scope.
      */
+
     std::ifstream file;
     /**
      * In accordance with ERR50-CPP: Do not abruptly terminate the program
@@ -54,6 +55,7 @@ auto main(int argc, const char *argv[]) -> int{
     bool outfile_provided = false;
     bool encrypt = false;
     bool decrypt = false;
+    u_int64_t testFlags = 256;
      enum MODES_OF_OPERATION {
         ECB = 0,
         CBC = 1,
@@ -90,7 +92,13 @@ auto main(int argc, const char *argv[]) -> int{
            *
            **/
           if (strncmp(argv[i], "-g", sizeof("-g")) == 0 || strcmp(argv[i], "--gen") == 0) {
-              key_bytes = ciphermodes::genKey(atoi(argv[i + 1]));
+              std::cout << "KEY Generated to file named genkey\n";
+                /**
+                 * In accordance with ERR34-C and ERR62-CPP. Detect errors when converting a string to a number
+                 * The use of conversion functions that do not perform conversion validation such as atoi are banned
+                 * std::stoi() performs conversion validation 
+                 */
+              key_bytes = ciphermodes::genKey(std::stoi(argv[i + 1]));
               write_binary_file("genkey", key_bytes);
               return EXIT_SUCCESS; // ERR50-CPP returning from main is preferable to a naked call to std::exit
           }
@@ -103,10 +111,12 @@ auto main(int argc, const char *argv[]) -> int{
           }
 
           if (strncmp(argv[i], "-out", sizeof("-out")) == 0) {
+              std::cout << "OUT specified\n";
               message_file_name = argv[i + 1];
               outfile_provided = true;
           } else if (strncmp(argv[i], "-k", sizeof("-k")) == 0) {
               // Read key
+              std::cout << "KEY specified\n";
               read_binary_file(argv[i + 1], key_bytes);
               keyfile_provided = true;
           } else if (strncmp(argv[i], "-d", sizeof("-d")) == 0 || strcmp(argv[i], "--decrypt") == 0) {
@@ -127,13 +137,9 @@ auto main(int argc, const char *argv[]) -> int{
               }
           } else if (strncmp(argv[i], "-D", sizeof("-D")) == 0) {
               mode = DEBUG;
+              testFlags = std::stoi(argv[i+1]);
           }
       }
-
-      /*if(!encrypt && !decrypt){
-          std::cerr << "ERROR: Specify encryption or decryption operations!\n";
-          return EXIT_FAILURE;
-      }*/
 
       if(encrypt && decrypt){
           std::cerr << "ERROR: Both encryption and decryption options were selected\n";
@@ -141,25 +147,38 @@ auto main(int argc, const char *argv[]) -> int{
       }
 
       if(mode == -1){
-          std::cerr << "Please designate a mode of operation! USAGE: -m <ecb | cbc | ctr | cfb | ofm>\n";
+          std::cerr << "ERROR: Please designate a mode of operation! USAGE: -m <ecb | cbc | ctr | cfb | ofm>\n";
           return EXIT_FAILURE;
       }
 
-      if(!keyfile_provided){
-          std::cerr << "Please provide a keyfile! USAGE: -k <argument>\n";
+      if(!keyfile_provided && encrypt){
+          std::cout << "Keyfile not provided. A keyfile can be provided using the k flag. USAGE: -k <argument>\n";
+          std::cout << "A new keyfile can be generated using the genkey command USAGE: -g <argument> | --gen <argument>\nThe key will be stored in a file named genkey\n";
+          std::cout << "Since a keyfile was not provided for this encryption, the encryption will be performed with a newly generated 256 bit key which has been saved to a file named genkey\n.";
+          key_bytes = ciphermodes::genKey(256);
+          write_binary_file("genkey", key_bytes);
+      }
+
+      if(!keyfile_provided && !encrypt){
+          std::cout << "Keyfile not provided. A keyfile can be provided using the k flag. USAGE: -k <argument>\n";
+          std::cout << "A new keyfile can be generated using the genkey command USAGE: -g <argument> | --gen <argument>\nThe key will be stored in a file named genkey\n";
           return EXIT_FAILURE;
       }
 
      if(!plaintext_provided){
-          std::cerr << "Please provide a message file! USAGE: -in <argument>\n";
+          std::cerr << "ERROR: Please provide a message file! USAGE: -in <argument>\n";
           return EXIT_FAILURE;
       }
 
       if(!outfile_provided && mode != DEBUG){
-          std::cerr << "Please provide an ouput file! USAGE: -out <argument>\n";
+          std::cerr << "ERROR: Please provide an ouput file! USAGE: -out <argument>\n";
           return EXIT_FAILURE;
       }
-
+      
+      if((mode != DEBUG) && !encrypt && !decrypt){
+          std::cerr << "ERROR: Specify encryption or decryption operations!\n";
+          return EXIT_FAILURE;
+      }
 
       if(mode == ECB){
           if(encrypt){
