@@ -36,6 +36,7 @@ namespace ciphermodes {
 
     auto convert_block_to_state(std::vector<aes::byte> block) -> aes::state;
 
+    
     template <std::size_t BIT_SIZE>
     auto convert_block_to_state(const std::array<aes::byte, BIT_SIZE / 8>& block) -> aes::state {
         int index = 0;
@@ -50,6 +51,13 @@ namespace ciphermodes {
 
     auto convert_state_to_block(aes::state state) -> std::vector<aes::byte>;
 
+    
+    /*
+     * @brief Merges the IV bytes and the blocks of the ciphertext into a single vector of bytes with the IV bytes in the front
+     *
+     * @param IV: array containing the random bytes of the IV
+     * @param ciphertext_blocks: vector of blocks containing the ciphertext after encryption
+     */
     template <int SIZE>
 	auto merge_IV_blocks(const std::array<aes::byte,SIZE>& IV, const std::vector<std::vector<aes::byte>>& ciphertext_blocks) -> std::vector<aes::byte>{
         	std:: vector<aes::byte> ciphertext_bytes;
@@ -66,11 +74,23 @@ namespace ciphermodes {
 		return ciphertext_bytes;
 	}
     
+    /*
+     *@brief Creates merges a nonce with a counter to create the state that will be encrypted with AES for CTR Mode
+     *
+     * @param nonce: 96 bit random nonce 
+     * @param counter: counter that is increased with number of blocks being encrypted
+     */
     auto create_CTR(std::array<aes::byte,12> nonce, aes::word counter)->aes::state;
 
+    
+    /*
+     * @brief Extracts the 96bit nonce from the ciphertext and separates the remaining bytes into blocks of length 128 bits
+     *
+     * @param ciphertext_bytes: the ciphertext being decrypted
+     */
     auto create_nonce_blocks(std::vector<aes::byte> ciphertext_bytes) ->aes::Tuple<std::array<aes::byte, 12>, std::vector<std::vector<aes::byte>>>;
 
-    /**
+    /*
      * @brief Electronic Codebook;
      * 
      * @param plaintext_bytes: Vector containing the bytes of the plaintext
@@ -80,13 +100,39 @@ namespace ciphermodes {
     auto ECB_Encrypt(std::vector<aes::byte> plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
     auto ECB_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
 
+    /*
+     * @brief Counter Mode Encryption;
+     *
+     * @param plaintext_bytes: Vector containing the bytes of the plaintext
+     * @param key_bytes: Vector containing the bytes of the key
+     */
     auto CTR_Encrypt(std::vector<aes::byte> plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
+    
+    /*
+     * @brief Counter Mode Decryption;
+     *
+     * @param ciphertext_bytes: Vector containing the bytes of the ciphertext
+     * @param key_bytes: Vector containing the bytes of the key
+     */
     auto CTR_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
 
     auto CBC_Encrypt(std::vector<aes::byte> plaintext_bytes, const std::vector<aes::byte>& key_bytes) ->std::vector<aes::byte>;
     auto CBC_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
 
+    /*
+     * @brief Cipher Feedback Mode Encryption;
+     *
+     * @param plaintext_bytes: Vector containing the bytes of the plaintext
+     * @param key_bytes: Vector containing the bytes of the key
+     */
     auto CFB_Encrypt(std::vector<aes::byte> plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
+    
+    /*
+     * @brief Cipher Feedback Mode Decryption;
+     *
+     * @param ciphertext_bytes: Vector containing the bytes of the ciphertext
+     * @param key_bytes: Vector containing the bytes of the key
+     */
     auto CFB_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>;
 
 

@@ -135,7 +135,7 @@ namespace aes
      * @brief Performs multiplication between two elements in the finite field of polynomials modulo x^8+x^4+x^3+x+1
      * 
      * @param s : the byte in that represents a polynomial in the finite field
-     * @param num : another byte tat represents a polynomial in the finite field
+     * @param num : another byte that represents a polynomial in the finite field
      * @return byte 
      */
     auto field_multiply(byte s, uint8_t num) -> byte;
