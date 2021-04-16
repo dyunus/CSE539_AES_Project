@@ -15,6 +15,7 @@ auto read_binary_file(const char *file_name, std::vector<aes::byte> &vec){
      * well-formed code should handle "acquiring resources in a constructor and [release] them in a destructor". ~ Bjarne Stroustrup, THE programmer
      * ifstream releases the underlying file resources in its destructor, triggered when it goes out of scope.
      */
+
     std::ifstream file;
     /**
      * In accordance with ERR50-CPP: Do not abruptly terminate the program
@@ -54,6 +55,7 @@ auto main(int argc, const char *argv[]) -> int{
     bool outfile_provided = false;
     bool encrypt = false;
     bool decrypt = false;
+    u_int64_t testFlags = 256;
      enum MODES_OF_OPERATION {
         ECB = 0,
         CBC = 1,
@@ -66,7 +68,7 @@ auto main(int argc, const char *argv[]) -> int{
     try {
       for(int i = 0; i < argc; i++) {
 
-          if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+          if (strncmp(argv[i], "-h",sizeof("-h")) == 0 || strncmp(argv[i], "--help",sizeof("--help")) == 0 ) {
               // Print help information
               printf("%s\n", "Usage: aes_exec [OPTION]...");
               printf("%-40s %s\n", "-h, --help", "Display this help text");
@@ -89,15 +91,25 @@ auto main(int argc, const char *argv[]) -> int{
            * expected argument.
            *
            **/
-          if (strncmp(argv[i], "-g", sizeof("-g")) == 0 || strcmp(argv[i], "--gen") == 0) {
-              key_bytes = ciphermodes::genKey(atoi(argv[i + 1]));
+          if (strncmp(argv[i], "-g", sizeof("-g")) == 0 || strncmp(argv[i], "--gen", sizeof("--gen")) == 0 ) {
+                /**
+                 * In accordance with ERR34-C and ERR62-CPP. Detect errors when converting a string to a number
+                 * The use of conversion functions that do not perform conversion validation such as atoi are banned
+                 * std::stoi() performs conversion validation 
+                 */
+              int key_length = std::stoi(argv[i + 1]);
+              if(key_length != 128 && key_length != 192 && key_length != 256){
+                  std::cerr << "ERROR: Invalid key length to generate provided! Valid key lengths are 128, 192, 256\n";
+                  return EXIT_FAILURE;
+              }
+              key_bytes = ciphermodes::genKey(key_length);
               write_binary_file("genkey", key_bytes);
+              std::cout << "KEY Generated to file named genkey\n";
               return EXIT_SUCCESS; // ERR50-CPP returning from main is preferable to a naked call to std::exit
           }
 
           if (strncmp(argv[i], "-in", sizeof("-in")) == 0) {
               // Read file
-              std::cout << "IN specified\n";
               read_binary_file(argv[i + 1], input_bytes);
               plaintext_provided = true;
           }
@@ -109,9 +121,9 @@ auto main(int argc, const char *argv[]) -> int{
               // Read key
               read_binary_file(argv[i + 1], key_bytes);
               keyfile_provided = true;
-          } else if (strncmp(argv[i], "-d", sizeof("-d")) == 0 || strcmp(argv[i], "--decrypt") == 0) {
+          } else if (strncmp(argv[i], "-d", sizeof("-d")) == 0 || strncmp(argv[i], "--decrypt", sizeof("--decrypt")) == 0 ) {
               decrypt = true;
-          } else if (strncmp(argv[i], "-e", sizeof("-e")) == 0 || strcmp(argv[i], "--encrypt") == 0) {
+          } else if (strncmp(argv[i], "-e", sizeof("-e")) == 0 || strncmp(argv[i], "--encrypt", sizeof("--encrypt")) == 0 ) {
               encrypt = true;
           } else if (strncmp(argv[i], "-m", sizeof("-m")) == 0) {
               if (strncmp(argv[i + 1], "ecb", sizeof("ecb")) == 0) {
@@ -127,13 +139,9 @@ auto main(int argc, const char *argv[]) -> int{
               }
           } else if (strncmp(argv[i], "-D", sizeof("-D")) == 0) {
               mode = DEBUG;
+              testFlags = std::stoi(argv[i+1]);
           }
       }
-
-      /*if(!encrypt && !decrypt){
-          std::cerr << "ERROR: Specify encryption or decryption operations!\n";
-          return EXIT_FAILURE;
-      }*/
 
       if(encrypt && decrypt){
           std::cerr << "ERROR: Both encryption and decryption options were selected\n";
@@ -141,25 +149,38 @@ auto main(int argc, const char *argv[]) -> int{
       }
 
       if(mode == -1){
-          std::cerr << "Please designate a mode of operation! USAGE: -m <ecb | cbc | ctr | cfb | ofm>\n";
+          std::cerr << "ERROR: Please designate a mode of operation! USAGE: -m <ecb | cbc | ctr | cfb | ofm>\n";
           return EXIT_FAILURE;
       }
 
-      if(!keyfile_provided){
-          std::cerr << "Please provide a keyfile! USAGE: -k <argument>\n";
+      if(!keyfile_provided && (encrypt || mode == DEBUG)){
+          std::cout << "Keyfile not provided. A keyfile can be provided using the k flag. USAGE: -k <argument>\n";
+          std::cout << "A new keyfile can be generated using the genkey command USAGE: -g <argument> | --gen <argument>\nThe key will be stored in a file named genkey\n";
+          std::cout << "Since a keyfile was not provided for this encryption, the encryption will be performed with a newly generated 256 bit key which has been saved to a file named genkey\n.";
+          key_bytes = ciphermodes::genKey(256);
+          write_binary_file("genkey", key_bytes);
+      }
+
+      if(!keyfile_provided && (!encrypt && mode != DEBUG)){
+          std::cout << "Keyfile not provided. A keyfile can be provided using the k flag. USAGE: -k <argument>\n";
+          std::cout << "A new keyfile can be generated using the genkey command USAGE: -g <argument> | --gen <argument>\nThe key will be stored in a file named genkey\n";
           return EXIT_FAILURE;
       }
 
      if(!plaintext_provided){
-          std::cerr << "Please provide a message file! USAGE: -in <argument>\n";
+          std::cerr << "ERROR: Please provide a message file! USAGE: -in <argument>\n";
           return EXIT_FAILURE;
       }
 
       if(!outfile_provided && mode != DEBUG){
-          std::cerr << "Please provide an ouput file! USAGE: -out <argument>\n";
+          std::cerr << "ERROR: Please provide an ouput file! USAGE: -out <argument>\n";
           return EXIT_FAILURE;
       }
-
+      
+      if((mode != DEBUG) && !encrypt && !decrypt){
+          std::cerr << "ERROR: Specify encryption or decryption operations!\n";
+          return EXIT_FAILURE;
+      }
 
       if(mode == ECB){
           if(encrypt){
@@ -217,7 +238,7 @@ auto main(int argc, const char *argv[]) -> int{
       }
 
       if(mode == DEBUG) {
-	      tb::test_modules(256 , input_bytes, key_bytes);
+	      tb::test_modules(testFlags, input_bytes, key_bytes);
       }
     /**
      * ERR54-CPP : Handle exceptions in order of most derived to least derived
@@ -240,7 +261,11 @@ auto main(int argc, const char *argv[]) -> int{
         std::cerr << "Error in testbench function: " << e.where() << "\n"
                 << e.what() << "\n";
         return EXIT_FAILURE;
-    } catch (...) {
+    } catch(const std::invalid_argument& e) {
+        std::cerr << "Error in parsing cli arguments: " << e.what() << "\n";
+        return EXIT_FAILURE;
+    }
+    catch (...) {
         /**
         * In accordance with ERR51-CPP: Handle all exceptions
         * Prior to this, I thought it was bad-practice to use a generic catch for three reasons:
