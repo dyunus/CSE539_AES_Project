@@ -219,7 +219,13 @@ auto main(int argc, const char *argv[]) -> int{
       if(mode == DEBUG) {
           test_modules(256 , input_bytes, key_bytes);
       }
-    } catch(const aes_error& aes_err) {
+    /**
+     * ERR54-CPP : Handle exceptions in order of most derived to least derived
+     * In order to prevent a more generic case from beating a more specific, we decided to implement our own
+     * subclasses of std::exception in order to have more fine-grained control flow in the catch handlers.
+     * Furthermore, the general catch is at the way bottom of the list for those not covered above it.
+     **/
+    } catch(const aes_error& aes_err) { // All exceptions are captured as const references, in accordance with ERR61-CPP
         std::cerr << aes_err.what();
         return EXIT_FAILURE;
     } catch (const std::ifstream::failure& e) {
@@ -233,6 +239,17 @@ auto main(int argc, const char *argv[]) -> int{
     } catch (const testbench_error& e) {
         std::cerr << "Error in testbench function: " << e.where() << "\n"
                 << e.what() << "\n";
+        return EXIT_FAILURE;
+    } catch (...) {
+        /**
+        * In accordance with ERR51-CPP: Handle all exceptions
+        * Prior to this, I thought it was bad-practice to use a generic catch for three reasons:
+        * 1) It felt lazy to have a generic catch
+        * 2) I didn't know exceptions handled stack unwinding for a more graceful program exit
+        * 3) I wasn't aware of the C++11 feature that allows you to capture the context's current exception for printing
+        **/
+        std::exception_ptr excep_ptr = std::current_exception();
+        std::cerr << "Unhandled exception caught: " << e.what() << "\n";
         return EXIT_FAILURE;
     }
 }
