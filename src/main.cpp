@@ -130,10 +130,10 @@ auto main(int argc, const char *argv[]) -> int{
           }
       }
 
-      if(!encrypt && !decrypt){
+      /*if(!encrypt && !decrypt){
           std::cerr << "ERROR: Specify encryption or decryption operations!\n";
           return EXIT_FAILURE;
-      }
+      }*/
 
       if(encrypt && decrypt){
           std::cerr << "ERROR: Both encryption and decryption options were selected\n";
@@ -217,7 +217,7 @@ auto main(int argc, const char *argv[]) -> int{
       }
 
       if(mode == DEBUG) {
-          test_modules(256 , input_bytes, key_bytes);
+	      tb::test_modules(256 , input_bytes, key_bytes);
       }
     /**
      * ERR54-CPP : Handle exceptions in order of most derived to least derived
@@ -249,7 +249,7 @@ auto main(int argc, const char *argv[]) -> int{
         * 3) I wasn't aware of the C++11 feature that allows you to capture the context's current exception for printing
         **/
         std::exception_ptr excep_ptr = std::current_exception();
-        std::cerr << "Unhandled exception caught: " << e.what() << "\n";
+        std::cerr << "Uncaught exception handled.\n";
         return EXIT_FAILURE;
     }
 }

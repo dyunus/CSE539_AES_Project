@@ -39,7 +39,7 @@ void tb::test_modules(uint64_t test_flags, std::vector<aes::byte>& plaintext_byt
 	test_keyexpansion128_timing();
 	test_keyexpansion192_timing();
 	test_keyexpansion256_timing();
-	test_key_expansion(key_bytes)
+	test_key_expansion(key_bytes);
     }
     if ((test_flags & TEST_AES_TIMING) != 0U){
 	test_aes128_text_timing();
@@ -66,6 +66,7 @@ void tb::test_modules(uint64_t test_flags, std::vector<aes::byte>& plaintext_byt
     }
     if ((test_flags & TEST_GENERIC) != 0U){
 	test_aes();
+    }
 }
 
 void tb::test_no_cache_lookup_timing() {
@@ -888,7 +889,7 @@ void tb::test_aes128_key_timing(){
                 std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
                 for (const auto& i : shuffleVector) {
 			std::vector<aes::word> val = expandedKeys[i];
-			std::state state = text;
+			aes::state state = text;
                         auto enc_start = std::chrono::steady_clock::now();
                         aes::encrypt(Nr, state, val);
                         auto enc_end = std::chrono::steady_clock::now();
@@ -898,7 +899,7 @@ void tb::test_aes128_key_timing(){
         }
 	std::cout <<"==========AES128 KEY TIMING TEST==========\n";
         std::cout<<"PlainText: ";
-        aes::debug_print_state(text[i]);
+        aes::debug_print_state(text);
         printf("\n");
         for (std::size_t i = 0; i < 5; ++i) {
 		std::cout<<"Key: ";
@@ -942,7 +943,7 @@ void tb::test_aes192_key_timing(){
                 std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
                 for (const auto& i : shuffleVector) {
                         std::vector<aes::word> val = expandedKeys[i];
-                        std::state state = text;
+                        aes::state state = text;
                         auto enc_start = std::chrono::steady_clock::now();
                         aes::encrypt(Nr, state, val);
                         auto enc_end = std::chrono::steady_clock::now();
@@ -952,7 +953,7 @@ void tb::test_aes192_key_timing(){
         }
 	std::cout <<"==========AES192 KEY TIMING TEST==========\n";
         std::cout<<"PlainText: ";
-        aes::debug_print_state(text[i]);
+        aes::debug_print_state(text);
         printf("\n");
         for (std::size_t i = 0; i < 5; ++i) {
                 std::cout<<"Key: ";
@@ -996,7 +997,7 @@ void tb::test_aes256_key_timing(){
                 std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
                 for (const auto& i : shuffleVector) {
                         std::vector<aes::word> val = expandedKeys[i];
-                        std::state state = text;
+                        aes::state state = text;
                         auto enc_start = std::chrono::steady_clock::now();
                         aes::encrypt(Nr, state, val);
                         auto enc_end = std::chrono::steady_clock::now();
@@ -1006,7 +1007,7 @@ void tb::test_aes256_key_timing(){
         }
 	std::cout <<"==========AES256 KEY TIMING TEST==========\n";
         std::cout<<"PlainText: ";
-        aes::debug_print_state(text[i]);
+        aes::debug_print_state(text);
         printf("\n");
         for (std::size_t i = 0; i < 5; ++i) {
                 std::cout<<"Key: ";
