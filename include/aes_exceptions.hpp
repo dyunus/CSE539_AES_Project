@@ -3,6 +3,7 @@
 
 #include <stdexcept>
 #include <unordered_map>
+#include <string>
 
 class aes_error : public std::runtime_error {
 public:
