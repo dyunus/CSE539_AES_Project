@@ -236,7 +236,7 @@ auto main(int argc, const char *argv[]) -> int{
       }
 
       if(mode == DEBUG) {
-	      tb::test_modules(256 , input_bytes, key_bytes);
+	      tb::test_modules(testFlags, input_bytes, key_bytes);
       }
     /**
      * ERR54-CPP : Handle exceptions in order of most derived to least derived
