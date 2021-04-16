@@ -203,13 +203,17 @@ auto ciphermodes::CTR_Encrypt(std::vector<aes::byte> plaintext_bytes, const std:
 	       nonce.at(i) = temp.at(i);
 	}
 
+	//iterates over all plaintext blocks
 	for(auto& plain_block: plaintext_blocks){
-		aes::state CTR = create_CTR(nonce, counter);
+		aes::state CTR = create_CTR(nonce, counter); //appends the nonce with current value of the counter as a state matrix for encryption
 		aes::encrypt(nk_nr[1], CTR, expandedKey);
+		
+		//takes the encrypted state and xors it with the plaintext
 		std::vector<aes::byte> encrypted_block = convert_state_to_block(CTR);
 		plain_block= xor_blocks(plain_block, encrypted_block);
 		counter++;
 	}
+	//creates ciphertext by appending the 96bit IV to the beginning of the encrypted plaintext blocks
 	std::vector<aes::byte> ciphertext_bytes = merge_IV_blocks<12>(nonce, plaintext_blocks);
 	return ciphertext_bytes;	
 }
@@ -220,15 +224,24 @@ auto ciphermodes::CTR_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std
 	//Key Expansion
 	std::vector<aes::word> expandedKey(aes::NB*(nk_nr[1]+1));
         aes::key_expansion(key_bytes, expandedKey, nk_nr[0], nk_nr[1]);
+	
+	//extracts the IV from the first 12 ciphertext bytes and organizes the remaining bytes into blocks of 128 bits
 	aes::Tuple<std::array<aes::byte, 12>, std::vector<std::vector<aes::byte>>> nonce_cipherblocks = create_nonce_blocks(std::move(ciphertext_bytes));
+	
+	//counter starting at 0
 	aes::word counter = 0U;
+
 	for(auto& cipher_block: nonce_cipherblocks.element2){
-		aes::state CTR = create_CTR(nonce_cipherblocks.element1, counter);
+		aes::state CTR = create_CTR(nonce_cipherblocks.element1, counter); //appends nonce and counter as state matrix for encryption
 		aes::encrypt(nk_nr[1], CTR, expandedKey);
+
+		//take encrypted state and xors with ciphertext to get back original plaintext
 		std::vector<aes::byte> encrypted_block = convert_state_to_block(CTR);
 		cipher_block = xor_blocks(cipher_block,encrypted_block);
 		counter++;
 	}
+
+	//returns decrypted plaintext
 	std::vector<aes::byte> plaintext_bytes = merge_blocks(nonce_cipherblocks.element2);
 	return plaintext_bytes;
 }
@@ -294,31 +307,49 @@ auto ciphermodes::CFB_Encrypt(std::vector<aes::byte> plaintext_bytes, const std:
 	    temp.push_back(byte);
     }
     
+    //separate plaintext into blocks for encryption
     std::vector<std::vector<aes::byte> > plaintext_blocks = ciphermodes::create_blocks(std::move(plaintext_bytes));
+    
+    //iterates through all plaintext blocks
     for(auto& plaintext_block : plaintext_blocks) {
+	    
 	    aes::state state = convert_block_to_state(temp);
 	    aes::encrypt(nk_nr[1], state, expandedKey);
 	    temp = convert_state_to_block(state);
+
+	    //encrypted block becomes input of AES for next block's encryption
 	    temp = xor_blocks(plaintext_block, temp);
 	    plaintext_block = temp;
     }
+
+    //creates ciphertext by appending the 96bit IV to the beginning of the encrypted plaintext blocks
     std::vector<aes::byte> ciphertext_bytes = merge_IV_blocks<16>(IV, plaintext_blocks);
     return ciphertext_bytes;
 }
 
 auto ciphermodes::CFB_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>{
     std::array<int, 2> nk_nr = aes::get_Nk_Nr(key_bytes.size());
+    
+    //Key expansion
     std::vector<aes::word> expandedKey(aes::NB*(nk_nr[1]+1));
     aes::key_expansion(key_bytes, expandedKey, nk_nr[0], nk_nr[1]);
+    
+    //Separate ciphertext into blocks of 128 bits where the first block is the IV
     std::vector<std::vector<aes::byte> > ciphertext_blocks =  create_blocks(std::move(ciphertext_bytes));
     std::vector<std::vector<aes::byte> > plaintext_blocks;
+
+    //iterates through ciphertext blocks starting at 1 since first block is the IV
     for(size_t i=1; i < ciphertext_blocks.size(); i++){
 	    aes::state state = convert_block_to_state(ciphertext_blocks[i-1]);
 	    aes::encrypt(nk_nr[1], state, expandedKey);
+	    
+	    //decryption of ciphertext
 	    std::vector<aes::byte> temp = convert_state_to_block(state);
 	    temp = xor_blocks(ciphertext_blocks[i], temp);
 	    plaintext_blocks.push_back(temp);
     }
+
+    //returns decrypted plaintext
     std::vector<aes::byte> plaintext_bytes = merge_blocks(plaintext_blocks);
     return plaintext_bytes;
 }

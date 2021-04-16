@@ -217,49 +217,7 @@ auto main(int argc, const char *argv[]) -> int{
       }
 
       if(mode == DEBUG) {
-          test_modules(tb::TEST_NO_CACHE);
-
-          tb::test_ofm_mode_accuracy(input_bytes, key_bytes);
-
-          tb::test_manual_sbox();
-
-          tb::test_ecb_mode(input_bytes, key_bytes);
-
-          tb::test_cbc_mode(input_bytes, key_bytes);
-
-          tb::test_ctr_mode(input_bytes, key_bytes);
-
-          tb::test_cfb_mode(input_bytes, key_bytes);
-
-          tb::test_key_expansion(key_bytes);
-
-          tb::test_aes();
-
-          tb::test_shiftRow_timing();
-
-          tb::test_mixColumns_timing();
-
-          tb::test_subBytes_timing();
-
-          tb::test_fieldmultiply2_timing();
-
-          tb::test_addRounkey_state_timing();
-
-          tb::test_addRounkey_roundkey_timing();
-
-          tb::test_addRounkey_timing();
-
-          tb::test_keyexpansion128_timing();
-
-          tb::test_keyexpansion192_timing();
-
-          tb::test_keyexpansion256_timing();
-
-          tb::test_aes128_text_timing();
-
-          tb::test_aes192_text_timing();
-
-          tb::test_aes256_text_timing();
+          test_modules(256 , input_bytes, key_bytes);
       }
     } catch(const aes_error& aes_err) {
         std::cerr << aes_err.what();

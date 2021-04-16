@@ -8,14 +8,66 @@
 #include "ciphermodes.hpp"
 #include "yandom.hpp"
 
-void tb::test_modules(uint64_t test_flags) {
+void tb::test_modules(uint64_t test_flags, std::vector<aes::byte>& plaintext_bytes, const std::vector<aes::byte>& key_bytes) {
     /* In accordance with exp46-c: do not use a bitwise operator with a Boolean-like operand
      * In order to avoid ambiguity, it is recommended to envelop the bitwise operation in parenthesis as seen below.
      */
     if ((test_flags & TEST_NO_CACHE) != 0U) {
         test_no_cache_lookup_timing();
     }
+    if ((test_flags & TEST_MANUAL_SBOX) != 0U){
+	test_manual_sbox();
+    }
+    if ((test_flags & TEST_SUB_BYTES) != 0U){
+	test_subBytes_timing();
+    }
+    if ((test_flags & TEST_SHIFT_ROW) != 0U){
+	test_shiftRow_timing();
+    }
+    if ((test_flags & TEST_FIELD_MULTIPLY_BY_2) != 0U){
+	test_fieldmultiply2_timing();
+    }
+    if ((test_flags & TEST_MIX_COLUMNS) != 0U){
+	test_mixColumns_timing();
+    }
+    if ((test_flags & TEST_ADD_ROUND_KEY) != 0U){
+	test_addRounkey_state_timing();
+     	test_addRounkey_roundkey_timing();
+	test_addRounkey_timing();
+    }
+    if ((test_flags & TEST_KEY_EXPANSION) != 0U){
+	test_keyexpansion128_timing();
+	test_keyexpansion192_timing();
+	test_keyexpansion256_timing();
+	test_key_expansion(key_bytes)
+    }
+    if ((test_flags & TEST_AES_TIMING) != 0U){
+	test_aes128_text_timing();
+	test_aes192_text_timing();
+	test_aes256_text_timing();
+	test_aes128_key_timing();
+	test_aes192_key_timing();
+	test_aes256_key_timing();
+    }
+    if ((test_flags & TEST_ECB) != 0U){
+	test_ecb_mode(plaintext_bytes,key_bytes);
+    }
+    if ((test_flags & TEST_CBC) != 0U){
+	test_cbc_mode(plaintext_bytes, key_bytes);
+    }
+    if ((test_flags & TEST_CFB) != 0U){
+	test_cfb_mode(plaintext_bytes, key_bytes);
+    }
+    if ((test_flags & TEST_OFB) != 0U){
+	test_ofm_mode_accuracy(plaintext_bytes, key_bytes);
+    }
+    if ((test_flags & TEST_CTR) != 0U){
+	test_ctr_mode(plaintext_bytes, key_bytes);
+    }
+    if ((test_flags & TEST_GENERIC) != 0U){
+	test_aes();
 }
+
 void tb::test_no_cache_lookup_timing() {
     const unsigned int RUN_COUNT = 1000;
 
@@ -683,7 +735,6 @@ void tb::test_aes128_text_timing(){
         for (std::size_t l = 0; l < RUN_COUNT; ++l) {
                 std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
                 for (const auto& i : shuffleVector) {
-                        std::vector<aes::word> expandedKey(aes::NB * (Nr + 1));
 			aes::state val = texts[i];
                         auto enc_start = std::chrono::steady_clock::now();
                         aes::encrypt(Nr, val, expandedKey);
@@ -734,7 +785,6 @@ void tb::test_aes192_text_timing(){
         for (std::size_t l = 0; l < RUN_COUNT; ++l) {
                 std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
                 for (const auto& i : shuffleVector) {
-                        std::vector<aes::word> expandedKey(aes::NB * (Nr + 1));
                         aes::state val = texts[i];
                         auto enc_start = std::chrono::steady_clock::now();
                         aes::encrypt(Nr, val, expandedKey);
@@ -785,7 +835,6 @@ void tb::test_aes256_text_timing(){
         for (std::size_t l = 0; l < RUN_COUNT; ++l) {
                 std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
                 for (const auto& i : shuffleVector) {
-                        std::vector<aes::word> expandedKey(aes::NB * (Nr + 1));
                         aes::state val = texts[i];
                         auto enc_start = std::chrono::steady_clock::now();
                         aes::encrypt(Nr, val, expandedKey);
@@ -805,6 +854,168 @@ void tb::test_aes256_text_timing(){
                 std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
         }
         std::cout <<"==========END AES256 TEXT TIMING TEST==========\n";
+}
+
+void tb::test_aes128_key_timing(){
+        const unsigned int RUN_COUNT = 2000;
+
+        int Nk = 4;
+        int Nr = 10;
+        std::vector<double> avg_runtimes(5, 0.0);
+        std::vector<std::vector<aes::byte>> keys;
+	std::vector<std::vector<aes::word>> expandedKeys;
+        std::vector<int> shuffleVector = {0,1,2,3,4};
+        for(std::size_t i=0; i<5; i++){
+                auto temp = randgen<128>();
+                std::vector<aes::byte> key;
+                for(size_t i =0; i<16; i++){
+                        key.push_back(temp.at(i));
+                }
+                keys.push_back(key);
+		std::vector<aes::word>expandedKey(aes::NB*(Nr+1));
+        	aes::key_expansion(key,expandedKey, Nk,Nr);
+                expandedKeys.push_back(expandedKey);
+        }
+        auto temp =randgen<128>();
+        std::vector<aes::byte> arr;
+        for(size_t i=0; i<16; i++){
+                arr.push_back(temp.at(i));
+        }
+        aes::state text = ciphermodes::convert_block_to_state(arr);
+        std::random_device rd;
+        std::mt19937 g(rd());
+        for (std::size_t l = 0; l < RUN_COUNT; ++l) {
+                std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
+                for (const auto& i : shuffleVector) {
+			std::vector<aes::word> val = expandedKeys[i];
+			std::state state = text;
+                        auto enc_start = std::chrono::steady_clock::now();
+                        aes::encrypt(Nr, state, val);
+                        auto enc_end = std::chrono::steady_clock::now();
+                        auto enc_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(enc_end - enc_start).count();
+                        avg_runtimes[i] = (avg_runtimes[i] * l + enc_ns) / static_cast<double>(l + 1);
+                }
+        }
+	std::cout <<"==========AES128 KEY TIMING TEST==========\n";
+        std::cout<<"PlainText: ";
+        aes::debug_print_state(text[i]);
+        printf("\n");
+        for (std::size_t i = 0; i < 5; ++i) {
+		std::cout<<"Key: ";
+        	for(unsigned char chr : keys[i]){
+                	printf("0x%02x ", chr);
+        	}
+                std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
+        }
+        std::cout <<"==========END AES128 KEY TIMING TEST==========\n";
+}
+
+void tb::test_aes192_key_timing(){
+        const unsigned int RUN_COUNT = 2000;
+
+        int Nk = 6;
+        int Nr = 12;
+        std::vector<double> avg_runtimes(5, 0.0);
+        std::vector<std::vector<aes::byte>> keys;
+        std::vector<std::vector<aes::word>> expandedKeys;
+        std::vector<int> shuffleVector = {0,1,2,3,4};
+        for(std::size_t i=0; i<5; i++){
+                auto temp = randgen<256>();
+                std::vector<aes::byte> key;
+                for(size_t i =0; i<24; i++){
+                        key.push_back(temp.at(i));
+                }
+                keys.push_back(key);
+                std::vector<aes::word>expandedKey(aes::NB*(Nr+1));
+                aes::key_expansion(key,expandedKey, Nk,Nr);
+                expandedKeys.push_back(expandedKey);
+        }
+        auto temp =randgen<128>();
+        std::vector<aes::byte> arr;
+        for(size_t i=0; i<16; i++){
+                arr.push_back(temp.at(i));
+        }
+        aes::state text = ciphermodes::convert_block_to_state(arr);
+        std::random_device rd;
+        std::mt19937 g(rd());
+        for (std::size_t l = 0; l < RUN_COUNT; ++l) {
+                std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
+                for (const auto& i : shuffleVector) {
+                        std::vector<aes::word> val = expandedKeys[i];
+                        std::state state = text;
+                        auto enc_start = std::chrono::steady_clock::now();
+                        aes::encrypt(Nr, state, val);
+                        auto enc_end = std::chrono::steady_clock::now();
+                        auto enc_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(enc_end - enc_start).count();
+                        avg_runtimes[i] = (avg_runtimes[i] * l + enc_ns) / static_cast<double>(l + 1);
+                }
+        }
+	std::cout <<"==========AES192 KEY TIMING TEST==========\n";
+        std::cout<<"PlainText: ";
+        aes::debug_print_state(text[i]);
+        printf("\n");
+        for (std::size_t i = 0; i < 5; ++i) {
+                std::cout<<"Key: ";
+                for(unsigned char chr : keys[i]){
+                        printf("0x%02x ", chr);
+                }
+                std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
+        }
+        std::cout <<"==========END AES192 KEY TIMING TEST==========\n";
+}
+
+void tb::test_aes256_key_timing(){
+        const unsigned int RUN_COUNT = 2000;
+
+        int Nk = 8;
+        int Nr = 14;
+        std::vector<double> avg_runtimes(5, 0.0);
+        std::vector<std::vector<aes::byte>> keys;
+        std::vector<std::vector<aes::word>> expandedKeys;
+        std::vector<int> shuffleVector = {0,1,2,3,4};
+        for(std::size_t i=0; i<5; i++){
+                auto temp = randgen<256>();
+                std::vector<aes::byte> key;
+                for(size_t i =0; i<32; i++){
+                        key.push_back(temp.at(i));
+                }
+                keys.push_back(key);
+                std::vector<aes::word>expandedKey(aes::NB*(Nr+1));
+                aes::key_expansion(key,expandedKey, Nk,Nr);
+                expandedKeys.push_back(expandedKey);
+        }
+        auto temp =randgen<128>();
+        std::vector<aes::byte> arr;
+        for(size_t i=0; i<16; i++){
+                arr.push_back(temp.at(i));
+        }
+        aes::state text = ciphermodes::convert_block_to_state(arr);
+        std::random_device rd;
+        std::mt19937 g(rd());
+        for (std::size_t l = 0; l < RUN_COUNT; ++l) {
+                std::shuffle(shuffleVector.begin(), shuffleVector.end(), g); // Shuffle order of execution for each run
+                for (const auto& i : shuffleVector) {
+                        std::vector<aes::word> val = expandedKeys[i];
+                        std::state state = text;
+                        auto enc_start = std::chrono::steady_clock::now();
+                        aes::encrypt(Nr, state, val);
+                        auto enc_end = std::chrono::steady_clock::now();
+                        auto enc_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(enc_end - enc_start).count();
+                        avg_runtimes[i] = (avg_runtimes[i] * l + enc_ns) / static_cast<double>(l + 1);
+                }
+        }
+	std::cout <<"==========AES256 KEY TIMING TEST==========\n";
+        std::cout<<"PlainText: ";
+        aes::debug_print_state(text[i]);
+        printf("\n");
+        for (std::size_t i = 0; i < 5; ++i) {
+                std::cout<<"Key: ";
+                for(unsigned char chr : keys[i]){
+                        printf("0x%02x ", chr);
+                }
+                std::cout << "Average runtime (ns):"<<static_cast<int>(avg_runtimes[i])<<"\n";
+        }
+        std::cout <<"==========END AES256 KEY TIMING TEST==========\n";
 }
 
 
@@ -882,6 +1093,7 @@ void tb::test_aes(){
     aes::add_round_key(state4, roundKeyValue);
     aes::debug_print_state(state4);
 
+    std::cout <<"Testing Manual Calculation of S-Box:\n";
     aes::byte b = 0U;
     for (std::size_t i = 0; i < 256; i++)
     {
@@ -893,6 +1105,8 @@ void tb::test_aes(){
         b += 1U;
     }
     printf("\n\n");
+    
+    std::cout << "Testing Manual Calculation of Inverse S-Box:\n";
     b = 0U;
     for (std::size_t i = 0; i < 256; i++)
     {

@@ -14,6 +14,19 @@
 namespace tb {
     enum TESTCASES {
         TEST_NO_CACHE = 0x1
+	TEST_MANUAL_SBOX = 0x10;
+	TEST_SUB_BYTES = 0x100;
+	TEST_SHIFT_ROW = 0x1000;
+	TEST_FIELD_MULTIPLY_BY_2= 0x10000;
+	TEST_MIX_COLUMNS = 0x100000;
+	TEST_ADD_ROUND_KEY = 0x1000000;
+	TEST_KEY_EXPANSION = 0x10000000;
+	TEST_AES_TIMING = 0x100000000;
+	TEST_ECB = 0x1000000000;
+	TEST_CBC = 0x10000000000;
+	TEST_OFB = 0x100000000000;
+	TEST_CTR = 0x1000000000000;
+	TEST_GENERIC = 0x10000000000000;
     };
 
     /**
@@ -81,12 +94,18 @@ namespace tb {
 
     void test_aes256_text_timing();
 
+    void test_aes128_key_timing();
+
+    void test_aes192_key_timing();
+
+    void test_aes256_key_timing();
+    
     void test_aes();
     /**
      * @brief Function to call to test specific modules within the program
     * 
     * @param test_flags OR combination of TESTCASES you'd like to test
     */
-    void test_modules(uint64_t test_flags);
+    void test_modules(uint64_t test_flags, std::vector<aes::byte>& plaintext_bytes, const std::vector<aes::byte>& key_bytes);
 } // namespace tb
 #endif // TESTBENCH_HPP
