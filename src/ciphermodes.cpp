@@ -5,12 +5,19 @@
 
 auto ciphermodes::genKey(int keySize) -> std::vector<aes::byte>{
     int keySizeInBytes = keySize / 8;
+    
+    //generate a random 256 bit key
     auto key = randgen<256>();
+
+    //convert the key into a byte vector
     std::vector<aes::byte> temp;
     for(auto byte: key){
         temp.push_back(byte);
     }
+
+    //truncate to the desired key length passed in (128,192,or 256)
     std::vector<aes::byte> keyBytes = {temp.begin(), temp.begin() + keySizeInBytes}; 
+
     return keyBytes;
 }
 
@@ -25,14 +32,19 @@ void ciphermodes::print_blocks(std::vector<aes::byte> vec){
 }
 
 void ciphermodes::pad_plaintext(std::vector<aes::byte>& plaintext_bytes){
+        //number of padding bytes needed is equal to the block length - the number of bytes in the last partial block of the message
 		aes::byte padNum = 16 - (plaintext_bytes.size() % 16);
+        //add hex representation of number of bytes added b times where b is the number of padding bytes needed
         for(std::size_t i = 0; i < padNum; i++){
             plaintext_bytes.push_back(padNum);
         }
 }
 
 void ciphermodes::unpad_ciphertext(std::vector<aes::byte>& ciphertext_bytes){
-		aes::byte padNum = ciphertext_bytes.back();
+		//store the value of the last byte of padding, since according to PKCS#7 padding format, that value should appear as many times
+        //as its value from right to left
+        aes::byte padNum = ciphertext_bytes.back();
+        //remove the padding bytes from right to left and assert that the value follows PKCS#7 format
         for(aes::byte i = 0; i < padNum; i++){
             aes::byte check = ciphertext_bytes.back();
             if(check != padNum){
@@ -50,20 +62,29 @@ auto ciphermodes::xor_blocks(std::vector<aes::byte> block1,std::vector<aes::byte
 }
 
 auto ciphermodes::merge_blocks(const std::vector<std::vector<aes::byte>>& ciphertext_blocks) -> std::vector<aes::byte>{
-	std::vector<aes::byte> ciphertext_bytes;
+	//new vector to store the combined bytes of every block
+    std::vector<aes::byte> ciphertext_bytes;
+    //iterate through all blocks
     for (const auto& cipher_block : ciphertext_blocks) {
+        //iterate throught the bytes of each block and add them to the comvined vector
         for (const auto& block_byte : cipher_block) {
             ciphertext_bytes.push_back(block_byte);
         }
     }
-
+    //returned the combined bytes of every block
     return ciphertext_bytes;
 }
 
 auto ciphermodes::create_blocks(std::vector<aes::byte> plaintext_bytes) -> std::vector<std::vector<aes::byte> >{
-	std::vector<std::vector<aes::byte> > plaintext_blocks;
+	//new vector of vectors to store the plaintext as a vector of blocks (each block is a vector of bytes)
+    std::vector<std::vector<aes::byte> > plaintext_blocks;
+    
+    //temp variable to build the current block
     std::vector<aes::byte> new_block;
+    
+    //iterate through the plaintext
     for(std::size_t i = 0; i < plaintext_bytes.size(); i++){
+        //every 128 bits (16 bytes), the completed block is added to the vector of vectors
         if(i != 0 && i % 16 == 0){
             plaintext_blocks.push_back(new_block);
             new_block.clear();
@@ -71,12 +92,14 @@ auto ciphermodes::create_blocks(std::vector<aes::byte> plaintext_bytes) -> std::
         new_block.push_back(plaintext_bytes[i]);
     }
     plaintext_blocks.push_back(new_block);
+    //returned the vector of blocks correspodning to the plaintext
     return plaintext_blocks;
 }
 
 auto ciphermodes::convert_block_to_state(std::vector<aes::byte> block) -> aes::state{
     int index = 0;
     aes::state state;
+    //in AES, a block's contents are populated column after column as opposed to row after row
     for(std::size_t j = 0; j < aes::NB; j++) {
         for(std::size_t i = 0; i < aes::NB; i++){
             state[i][j] = block[index++];
@@ -87,6 +110,7 @@ auto ciphermodes::convert_block_to_state(std::vector<aes::byte> block) -> aes::s
 
 auto ciphermodes::convert_state_to_block(aes::state state) -> std::vector<aes::byte>{
     std::vector<aes::byte> block;
+    //in AES, a block's contents are populated column after column as opposed to row after row
     for(std::size_t j = 0; j < aes::NB; j++) {
         for(std::size_t i = 0; i < aes::NB; i++){
             block.push_back(state[i][j]);
@@ -138,24 +162,35 @@ auto ciphermodes::create_nonce_blocks(std::vector<aes::byte> ciphertext_bytes)->
 
 
 auto ciphermodes::ECB_Encrypt(std::vector<aes::byte> plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte> {
+    
     std::array<int, 2> nk_nr = aes::get_Nk_Nr(key_bytes.size()); 
+    
+    //key expansion
     std::vector<aes::word> expandedKey(aes::NB*(nk_nr[1]+1));
     aes::key_expansion(key_bytes, expandedKey, nk_nr[0], nk_nr[1]);
+    
+    //pad the plaintext and separate plaintext into blocks for encryption
     pad_plaintext(plaintext_bytes);
     std::vector<std::vector<aes::byte> > plaintext_blocks = ciphermodes::create_blocks(plaintext_bytes);
     
+    //iterate through all the blocks
     for(auto& plain_block : plaintext_blocks){
         aes::state state = convert_block_to_state(plain_block);
+        //encrypt each block
         aes::encrypt(nk_nr[1], state, expandedKey);
         plain_block = convert_state_to_block(state);
     }
 
+    //return the encrypted ciphertext
     std::vector<aes::byte> ciphertext_bytes = merge_blocks(plaintext_blocks);
     return ciphertext_bytes;
 }
 
 auto ciphermodes::ECB_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte> {
+    
     std::array<int, 2> nk_nr = aes::get_Nk_Nr(key_bytes.size()); 
+
+    //expand key
     std::vector<aes::word> expandedKey(aes::NB*(nk_nr[1]+1));
     aes::key_expansion(key_bytes, expandedKey, nk_nr[0], nk_nr[1]);
 
@@ -167,14 +202,17 @@ auto ciphermodes::ECB_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std
      * 1) the data structure is sufficiently large to warrant for an efficiency gain
      * 2) the data structure is never used afterwards where it was moved from 
      **/
+    //Separate ciphertext into blocks of 128 bits
     std::vector<std::vector<aes::byte> > ciphertext_blocks =  ciphermodes::create_blocks(std::move(ciphertext_bytes));
     
+    //iterate through all blocks of the cipher text
     for (auto& block : ciphertext_blocks) {
+        //decrypt each block
        aes::state state = convert_block_to_state(block);
         aes::decrypt(nk_nr[1], state, expandedKey);
         block = convert_state_to_block(state); 
     }
-
+    //removes padding and returns the decrypted plaintext
     std::vector<aes::byte> plaintext_bytes = merge_blocks(ciphertext_blocks);
     unpad_ciphertext(plaintext_bytes);
     return plaintext_bytes;
@@ -248,11 +286,17 @@ auto ciphermodes::CTR_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std
 
 auto ciphermodes::CBC_Encrypt(std::vector<aes::byte> plaintext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>{
     std::array<int, 2> nk_nr = aes::get_Nk_Nr(key_bytes.size()); 
+    
+    //key expansion
     std::vector<aes::word> expandedKey(aes::NB*(nk_nr[1]+1));
     aes::key_expansion(key_bytes, expandedKey, nk_nr[0], nk_nr[1]);
+    
     pad_plaintext(plaintext_bytes);
+
+    //separate plaintext into blocks for encryption
     std::vector<std::vector<aes::byte> > plaintext_blocks = ciphermodes::create_blocks(plaintext_bytes);
     
+    //get random IV
     auto IV = randgen<128>();
     std::vector<aes::byte> temp;
     temp.reserve(sizeof(aes::byte) * IV.size());
@@ -260,14 +304,19 @@ auto ciphermodes::CBC_Encrypt(std::vector<aes::byte> plaintext_bytes, const std:
 	    temp.push_back(byte);
     }
     
+    //prepend the IV to the plaintext blocks for encryption to begin the cipher chain
     plaintext_blocks.insert(plaintext_blocks.begin(), temp);
 
+    //iterates through all plaintext blocks
     for(std::size_t i = 1; i < plaintext_blocks.size(); i++){
+        //xor the current block with the encrypted previous block (or the IV for the first block)
         plaintext_blocks[i] = xor_blocks(plaintext_blocks[i],plaintext_blocks[i-1]);
         aes::state state = convert_block_to_state(plaintext_blocks[i]);
         aes::encrypt(nk_nr[1], state, expandedKey);
         plaintext_blocks[i] = convert_state_to_block(state);
     }
+
+    //returns the encrypted ciphertext
     std::vector<aes::byte> ciphertext_bytes = merge_blocks(plaintext_blocks);
     return ciphertext_bytes;
 }
@@ -275,18 +324,27 @@ auto ciphermodes::CBC_Encrypt(std::vector<aes::byte> plaintext_bytes, const std:
 
 auto ciphermodes::CBC_Decrypt(std::vector<aes::byte> ciphertext_bytes, const std::vector<aes::byte>& key_bytes) -> std::vector<aes::byte>{
     std::array<int, 2> nk_nr = aes::get_Nk_Nr(key_bytes.size()); 
+
+    //key expansion
     std::vector<aes::word> expandedKey(aes::NB*(nk_nr[1]+1));
     aes::key_expansion(key_bytes, expandedKey, nk_nr[0], nk_nr[1]);
+
+    //Separate ciphertext into blocks of 128 bits where the first block is the IV
     std::vector<std::vector<aes::byte> > ciphertext_blocks =  ciphermodes::create_blocks(std::move(ciphertext_bytes));
     
+    //iterates through ciphertext blocks starting at 1 since first block is the IV
     for(std::size_t i =  ciphertext_blocks.size() - 1; i > 0; i--){
         aes::state state = convert_block_to_state(ciphertext_blocks[i]);
+        //decrypts the ciphertextr block
         aes::decrypt(nk_nr[1], state, expandedKey);
         ciphertext_blocks[i] = convert_state_to_block(state);
         ciphertext_blocks[i] = xor_blocks(ciphertext_blocks[i],ciphertext_blocks[i-1]);
     }
 
+    //remove the IV from the plaintext
     ciphertext_blocks.erase(ciphertext_blocks.begin());
+    
+    //returns decrypted plaintext after removing padding
     std::vector<aes::byte> plaintext_bytes = merge_blocks(ciphertext_blocks);
     unpad_ciphertext(plaintext_bytes);
     return plaintext_bytes;
