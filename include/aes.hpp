@@ -127,8 +127,6 @@ namespace aes
      * @param s : the byte that represents the polynomial in the finite field that will be multiplied by x
      * @return byte : the result of the multiplication
      */    
-
-
     auto field_multiply_by_2(byte s) -> byte;
 
     /**
@@ -141,16 +139,16 @@ namespace aes
     auto field_multiply(byte s, uint8_t num) -> byte;
 
     /**
-     * @brief 
+     * @brief Performs the shift rows AES operaion of all the rows of the state
      * 
-     * @param state 
+     * @param state: reference to the AES state being operated upon
      */
     void shift_rows(state &state);
 
     /**
-     * @brief 
+     * @brief Performs the inverse shift rows AES operaion of all the rows of the state
      * 
-     * @param state 
+     * @param state: reference to the AES state being operated upon
      */
     void inv_shift_rows(state &state);
 
@@ -186,12 +184,28 @@ namespace aes
     auto buildWord(byte b1, byte b2, byte b3, byte b4) -> aes::word;
 
     /**
-     *
+     * @brief Performs the Add Round Key Operation with a given state and round key
+     * the round key is added to the state by a bitwise XOR 
+     * @param currState: reference to the AES state being operated upon
+     * @param roundKeyValue: refernece to the current round key
      */
     void add_round_key(state &currState, state &roundKeyValue);
 
+    /**
+     * @brief Calculates the values of Nk and Nr based on the keysize
+     * 
+     * @param keySize: size of the key being used for AES encryption/decryption
+     */
     auto get_Nk_Nr(int keySize) -> std::array<int, 2>;
 
+    /**
+     * @brief Performs the AES key expanstion routine
+     * A cipher key is expanded to generate a key schedule
+     * @param keyBytes: bytes of the cipher key being used
+     * @param w: vector of words of size aes::NB*(nk_nr[1]+1) to store the expanded key
+     * @param Nk: Number of 32-bit words comprising the Cipher Key
+     * @param Nr: Number of rounds, which is a function of Nk and Nb
+     */
     void key_expansion(std::vector<byte> keyBytes, std::vector<word>& w, unsigned int Nk, unsigned int Nr);
 
     /**
@@ -210,11 +224,23 @@ namespace aes
 
     auto spliceKey(unsigned int round, const std::vector<word>& key)-> aes::state;
 
+    /**
+     * @brief Performs the AES encryption
+     * @param Nr: Number of rounds, which is a function of Nk and Nb
+     * @param state: Reference to AES state being operated upon
+     * @param w: Reference to the expanded key
+     */
     void encrypt(unsigned int Nr, state& state, const std::vector<word>& w);
     
+    /**
+     * @brief Performs the AES decryption
+     * @param Nr: Number of rounds, which is a function of Nk and Nb
+     * @param state: Reference to AES state being operated upon
+     * @param w: Reference to the expanded key
+     */
     void decrypt(unsigned int Nr, state& state, const std::vector<word>& w);    
     
-    /*
+    /**
      *@brief Calculate the position of the most signicant (right-most) bit of the byte given
      *
      *@param s: byte being operated upon
@@ -223,7 +249,7 @@ namespace aes
     auto get_most_sig_bit(byte s) -> uint8_t;
 
 
-    /*
+    /**
      *@brief Retrieves the inverse modulo x^8+x^4+x^3+x+1 of the given polynomial
      *
      *@param s: byte that represents an element in the finite field modulo x^8+x^4+x^3+x+1
@@ -231,7 +257,7 @@ namespace aes
      */
     auto get_inverse(byte s) -> byte;
 
-    /*
+    /**
      * @brief Implementation of the Extended Euclidean algorithm which finds r,t such that r(left)+t(right)=gcd(left,right) where gcd is the greatest common divisor
      *
      * @param left: One of the bytes whose greatest common divisor will be found. NOTE, left must be greater than right
@@ -241,7 +267,7 @@ namespace aes
      */
     auto extended_euclidean_algorithm(byte left, byte right, uint8_t sigbit) -> std::array<byte, 2>;
 
-    /*
+    /**
      * @brief Calculates the S-Box value of the given byte
      *
      * @param s: Byte whose S-Box value we want to find
@@ -249,7 +275,7 @@ namespace aes
      */
     auto get_S_BOX_value(byte s) -> byte;
 
-    /*
+    /**
      * @brief Calculates the inverse S-Box value of the given byte
      *
      * @param s: Byte whose inverse S-Box value we want to find

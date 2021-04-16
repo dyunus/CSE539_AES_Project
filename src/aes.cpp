@@ -215,14 +215,16 @@ auto aes::buildWord(byte b1, byte b2, byte b3, byte b4) -> aes::word {
 }
 
 auto aes::rotword(word word) -> aes::word {
+  //performs a cyclic permutation
   auto split = splitWord(word);
   return buildWord(split[1], split[2], split[3], split[0]);
 }
 
 auto aes::subword(word word) -> aes::word {
+  
   auto split = splitWord(word);
   auto *sbox_ptr = S_BOX.data();
-
+ //applies the Sbox to each byte of an input word to produce an output word
   byte b1 = no_cache_lookup(split[0] & 0xF0U, split[0] & 0xFU, sbox_ptr);
   byte b2 = no_cache_lookup(split[1] & 0xF0U, split[1] & 0xFU, sbox_ptr);
   byte b3 = no_cache_lookup(split[2] & 0xF0U, split[2] & 0xFU, sbox_ptr);
@@ -233,7 +235,7 @@ auto aes::subword(word word) -> aes::word {
 
 auto aes::get_Nk_Nr(int keySize) -> std::array<int, 2> {
   std::array<int, 2> nk_nr{};
-  // determine Nk and Nr
+  // determine Nk and Nr based on the size of the cipher key
   if (keySize == 16) {
     nk_nr[0] = 4;
     nk_nr[1] = 10;
@@ -250,24 +252,28 @@ auto aes::get_Nk_Nr(int keySize) -> std::array<int, 2> {
   return nk_nr;
 }
 
-void aes::key_expansion(std::vector<byte> keyBytes, std::vector<word> &w,
-                        unsigned int Nk, unsigned int Nr) {
+void aes::key_expansion(std::vector<byte> keyBytes, std::vector<word> &w, unsigned int Nk, unsigned int Nr) {
   word temp = -1;
   unsigned int i = 0;
 
+  //the first Nk words of the expanded key are filled with the cipher key
   while (i < Nk) {
-    w[i] = aes::buildWord(keyBytes[4 * i], keyBytes[4 * i + 1],
-                          keyBytes[4 * i + 2], keyBytes[4 * i + 3]);
+    w[i] = aes::buildWord(keyBytes[4 * i], keyBytes[4 * i + 1], keyBytes[4 * i + 2], keyBytes[4 * i + 3]);
     i++;
   }
 
   i = Nk;
 
+  //for every following word, w[i] is equal to the XOR of the previous word and the word Nk positions earlier
   while (i < NB * (Nr + 1)) {
     temp = w[i - 1];
+    //for words in positions that are a multiple of Nk, a transformation is applied to w[i-1] prior to the XOR, followed by an XOR with a round constant
     if (i % Nk == 0) {
+      // The transformation applied is the cyclic shift of RotWord() and a table lookup substituion using SubWord()
       temp = aes::rotword(aes::subword(temp)) ^ Rcon.at(i / Nk);
-    } else if (Nk > 6 && (i % Nk == 4)) {
+    } 
+    //for 256 bit cipher keys, a subword is applied to w[i-1] prior to the xor when i-4 is a multiple of Nk
+    else if (Nk > 6 && (i % Nk == 4)) {
       temp = aes::subword(temp);
     }
     w[i] = w[i - Nk] ^ temp;
