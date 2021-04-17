@@ -97,6 +97,10 @@ auto main(int argc, const char *argv[]) -> int{
                  * The use of conversion functions that do not perform conversion validation such as atoi are banned
                  * std::stoi() performs conversion validation 
                  */
+              if(i+1 >= argc ){
+                  std::cerr << "ERROR: Invalid key length to generate provided! Valid key lengths are 128, 192, 256\n";
+                  return EXIT_FAILURE;
+              }
               int key_length = std::stoi(argv[i + 1]);
               if(key_length != 128 && key_length != 192 && key_length != 256){
                   std::cerr << "ERROR: Invalid key length to generate provided! Valid key lengths are 128, 192, 256\n";
@@ -110,6 +114,10 @@ auto main(int argc, const char *argv[]) -> int{
 
           if (strncmp(argv[i], "-in", sizeof("-in")) == 0) {
               // Read file
+            if(i+1 >= argc ){
+                std::cerr << "ERROR: No input file provided\n";
+                return EXIT_FAILURE;
+              }
               read_binary_file(argv[i + 1], input_bytes);
               plaintext_provided = true;
           }
@@ -119,6 +127,10 @@ auto main(int argc, const char *argv[]) -> int{
               outfile_provided = true;
           } else if (strncmp(argv[i], "-k", sizeof("-k")) == 0) {
               // Read key
+                if(i+1 >= argc ){
+                  std::cerr << "ERROR: No key file provided\n";
+                  return EXIT_FAILURE;
+              }
               read_binary_file(argv[i + 1], key_bytes);
               keyfile_provided = true;
           } else if (strncmp(argv[i], "-d", sizeof("-d")) == 0 || strncmp(argv[i], "--decrypt", sizeof("--decrypt")) == 0 ) {
@@ -126,6 +138,10 @@ auto main(int argc, const char *argv[]) -> int{
           } else if (strncmp(argv[i], "-e", sizeof("-e")) == 0 || strncmp(argv[i], "--encrypt", sizeof("--encrypt")) == 0 ) {
               encrypt = true;
           } else if (strncmp(argv[i], "-m", sizeof("-m")) == 0) {
+            if(i+1 >= argc ){
+                  std::cerr << "ERROR: No mode of operation provided\n";
+                  return EXIT_FAILURE;
+              }
               if (strncmp(argv[i + 1], "ecb", sizeof("ecb")) == 0) {
                   mode = ECB;
               } else if (strncmp(argv[i + 1], "cbc", sizeof("cbc")) == 0) {
@@ -138,6 +154,10 @@ auto main(int argc, const char *argv[]) -> int{
                   mode = OFM;
               }
           } else if (strncmp(argv[i], "-D", sizeof("-D")) == 0) {
+               if(i+1 >= argc ){
+                  std::cerr << "ERROR: No debug flags provided!\n";
+                  return EXIT_FAILURE;
+              }
               mode = DEBUG;
               testFlags = std::stoi(argv[i+1]);
           }
