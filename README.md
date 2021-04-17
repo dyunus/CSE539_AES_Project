@@ -10,7 +10,7 @@ Dependencies:
 CMake >= v3.13
 clang-tidy
 Suggested compiler: clang >= v10
-Linux, Mac, and Windows support
+Linux, Mac, and (maybe) Windows support
 ```
 
 Compilation:
