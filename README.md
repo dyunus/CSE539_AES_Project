@@ -36,6 +36,6 @@ Usage: aes_exec [OPTION]...
 EXAMPLE:
 aes_exec --gen 256
 aes_exec --encrypt -m ecb -in plaintext -k genkey -out encryptedMessage
-aes_exec --decrypt -m ecb -in encryptedMessage -k keyfile3 -out decryptedMessage
+aes_exec --decrypt -m ecb -in encryptedMessage -k genkey -out decryptedMessage
 ```
 
