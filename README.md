@@ -31,7 +31,6 @@ Usage: aes_exec [OPTION]...
 -in <argument>                           Input filename
 -out <argument>                          Output filename
 -k <argument>                            Specify key for AES
--iv <argument>                           Specify Initialazion Vector for certain modes of operation
 
 EXAMPLE:
 aes_exec --gen 256
