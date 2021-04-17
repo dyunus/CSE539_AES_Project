@@ -20,7 +20,7 @@ cd build && ./build.sh
 
 How To Use:
 ```
-echo -ne "\x70\x6f\x67\x67" > plaintext    
+echo -ne "\x6b\xc1\xbe\xe2\x2e\x40\x9f\x96\xe9\x3d\x7e\x11\x73\x93\x17\x2a\xae\x2d\x8a\x57\x1e\x03\xac\x9c\x9e\xb7\x6f\xac\x45\xaf\x8e\x51\x30\xc8\x1c\x46\xa3\x5c\xe4\x11\xe5\xfb\xc1\x19\x1a\x0a\x52\xef\xf6\x9f\x24\x45\xdf\x4f\x9b\x17\xad\x2b\x41\x7b\xe6\x6c\x37\x10" > plaintext  
 
 Usage: aes_exec [OPTION]...
 -h, --help                               Display this help text
@@ -37,5 +37,6 @@ EXAMPLE:
 aes_exec --gen 256
 aes_exec --encrypt -m ecb -in plaintext -k genkey -out encryptedMessage
 aes_exec --decrypt -m ecb -in encryptedMessage -k genkey -out decryptedMessage
+diff plaintext decryptedMessage
 ```
 
