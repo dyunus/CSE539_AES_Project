@@ -5,6 +5,14 @@ Team Members:
 - Luis Prieto
 - Danial Yunus
 
+Dependencies:
+```
+CMake >= v3.13
+clang-tidy
+Suggested compiler: clang >= v10
+Linux, Mac, and Windows support
+```
+
 Compilation:
 ```
 cd build && ./build.sh
@@ -27,7 +35,7 @@ Usage: aes_exec [OPTION]...
 
 EXAMPLE:
 aes_exec --gen 256
-aes_exec --encrypt -m ecb -in plaintext -k keyfile3 -out encryptedMessage
+aes_exec --encrypt -m ecb -in plaintext -k genkey -out encryptedMessage
 aes_exec --decrypt -m ecb -in encryptedMessage -k keyfile3 -out decryptedMessage
 ```
 
