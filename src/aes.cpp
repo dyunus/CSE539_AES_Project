@@ -7,7 +7,6 @@ void aes::swap_bytes(state &state, const std::array<byte, 256> &sub_source) {
       byte curr_byte = state[r][c];
       state[r][c] = no_cache_lookup(curr_byte & 0xF0U, curr_byte & 0xFU,
                                     sub_source.data());
-      // sub_source.at((curr_byte & 0xF0U) + (curr_byte & 0xFU));
     }
   }
 }
